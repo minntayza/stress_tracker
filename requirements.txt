@@ -1,0 +1,11 @@
+scikit-fuzzy
+numpy
+textblob
+flask
+matplotlib
+networkx
+scipy
+packaging
+Flask-Login
+Flask-SQLAlchemy
+email-validator

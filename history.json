@@ -1,0 +1,212 @@
+[
+    {
+        "date": "2026-02-02 20:03:53",
+        "stress_score": 18.074074074074066,
+        "recommendation": "Low stress. Great job maintaining balance!",
+        "status": "Initial"
+    },
+    {
+        "date": "2026-02-02 20:14:58",
+        "stress_score": 39.846003898635466,
+        "recommendation": "Low stress. Great job maintaining balance! Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 20:16:43",
+        "stress_score": 62.84928492849294,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 20:18:55",
+        "stress_score": 84.44444444444444,
+        "recommendation": "High stress detected. Prioritize sleep and breaks. Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 20:24:52",
+        "stress_score": 49.99999999999999,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 20:25:36",
+        "stress_score": 39.846003898635466,
+        "recommendation": "Low stress. Great job maintaining balance! You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 20:33:06",
+        "stress_score": 18.074074074074066,
+        "recommendation": "Low stress. Great job maintaining balance! You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 20:33:48",
+        "stress_score": 16.333333333333336,
+        "recommendation": "Low stress. Great job maintaining balance! You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 20:36:35",
+        "stress_score": 18.074074074074066,
+        "recommendation": "Low stress. Great job maintaining balance! Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 20:42:44",
+        "stress_score": 18.074074074074066,
+        "recommendation": "Low stress. Great job maintaining balance!",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 20:43:28",
+        "stress_score": 39.846003898635466,
+        "recommendation": "Low stress. Great job maintaining balance! Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 21:04:35",
+        "stress_score": 50.0,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 21:05:26",
+        "stress_score": 86.66666666666664,
+        "recommendation": "High stress detected. Prioritize sleep and breaks. Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 21:12:04",
+        "stress_score": 60.02723446397626,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 21:13:03",
+        "stress_score": 60.02723446397626,
+        "recommendation": "Moderate stress. Maintain a balanced schedule.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:13:07",
+        "stress_score": 60.02723446397626,
+        "recommendation": "Moderate stress. Maintain a balanced schedule.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:13:42",
+        "stress_score": 15.555555555555555,
+        "recommendation": "Low stress. Great job maintaining balance! You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 21:13:52",
+        "stress_score": 60.02723446397626,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Warning: Stress levels have increased since last time.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 21:13:55",
+        "stress_score": 60.02723446397626,
+        "recommendation": "Moderate stress. Maintain a balanced schedule.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:14:28",
+        "stress_score": 60.02723446397626,
+        "recommendation": "Moderate stress. Maintain a balanced schedule.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:20:42",
+        "stress_score": 24.198448224410622,
+        "recommendation": "Low stress. Great job maintaining balance! You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 21:22:04",
+        "stress_score": 24.198448224410622,
+        "recommendation": "Low stress. Great job maintaining balance!",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:44:10",
+        "stress_score": 85.0,
+        "recommendation": "High stress. RECOMMENDATION_A: Go for a run.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 21:44:10",
+        "stress_score": 50.0,
+        "recommendation": "Low stress.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 21:45:20",
+        "stress_score": 64.04234257326651,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Warning: Stress levels have increased since last time. Consider reducing screen time to improve well-being. \ud83d\udca1 Tip: Last time, this helped you: 'High stress. RECOMMENDATION_A: Go for a run.'",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 21:51:07",
+        "stress_score": 53.04145201297463,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. You are in a Healing Phase! Keep it up.",
+        "status": "Healing Phase"
+    },
+    {
+        "date": "2026-02-02 21:51:30",
+        "stress_score": 53.04145201297463,
+        "recommendation": "Moderate stress. Maintain a balanced schedule.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:56:48",
+        "stress_score": 53.04145201297463,
+        "recommendation": "Moderate stress. Maintain a balanced schedule.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 21:59:25",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Warning: Stress levels have increased since last time. Consider reducing screen time to improve well-being.",
+        "status": "Relapse"
+    },
+    {
+        "date": "2026-02-02 22:02:25",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Consider reducing screen time to improve well-being.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 22:03:00",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Consider reducing screen time to improve well-being.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 22:03:57",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Consider reducing screen time to improve well-being.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 22:04:50",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Consider reducing screen time to improve well-being.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 22:07:17",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Consider reducing screen time to improve well-being.",
+        "status": "Stagnant"
+    },
+    {
+        "date": "2026-02-02 22:07:33",
+        "stress_score": 69.49808313914158,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Consider reducing screen time to improve well-being.",
+        "status": "Stagnant"
+    }
+]

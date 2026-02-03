@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav
+        style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 1rem 2rem; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+            <div style="font-weight: 700; font-size: 1.2rem; color: var(--primary-color);">🧠 Stress Tracker</div>
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <a href="/" style="text-decoration: none; color: #2d3436; font-weight: 500;">Home</a>
+                <a href="/history"
+                    style="text-decoration: none; color: var(--primary-color); font-weight: 600;">History</a>
+                <a href="/goals" style="text-decoration: none; color: #2d3436; font-weight: 500;">Goals</a>
+                <span style="color: #636e72;">{{ user.username }}</span>
+                <a href="/logout" style="text-decoration: none; color: #d63031; font-weight: 500;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container animate__animated animate__fadeIn" style="max-width: 800px;">
+        <h1>Stress Analytics</h1>
+
+        <div class="result-card" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.9);">
+            <div class="label">Stress Level Trend</div>
+            <div style="height: 400px; position: relative; margin-top: 1rem;">
+                <canvas id="stressTrendChart"></canvas>
+            </div>
+        </div>
+
+        <div id="noDataMessage" class="result-card" style="display: none; text-align: center;">
+            <p>Not enough history data to display charts yet. Log some assessments!</p>
+        </div>
+
+        <div class="summary-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="result-card" style="text-align: center; margin-bottom: 0;">
+                <div class="label" style="font-size: 0.8rem;">Average Stress</div>
+                <div class="score" id="avgStress" style="font-size: 1.5rem;">--</div>
+            </div>
+            <div class="result-card" style="text-align: center; margin-bottom: 0;">
+                <div class="label" style="font-size: 0.8rem;">Highest Peak</div>
+                <div class="score" id="maxStress" style="font-size: 1.5rem; color: var(--danger-color);">--</div>
+            </div>
+            <div class="result-card" style="text-align: center; margin-bottom: 0;">
+                <div class="label" style="font-size: 0.8rem;">Current Status</div>
+                <div class="score" id="currentStatus" style="font-size: 1rem; margin-top: 0.8rem;">--</div>
+            </div>
+        </div>
+
+        <a href="/" class="btn" style="margin-top: 2rem;">Back to Assessment</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Safely parse data from backend
+            const historyData = {{ history_data | tojson | safe
+        }};
+        console.log("History data loaded:", historyData);
+
+        if (!historyData || historyData.length === 0) {
+            document.getElementById('stressTrendChart').parentNode.style.display = 'none';
+            document.getElementById('noDataMessage').style.display = 'block';
+            return;
+        }
+
+        const labels = historyData.map(entry => {
+            // Shorten dates: "2026-02-02 22:04:50" -> "02/02 22:04"
+            const dateParts = (entry.date || '').split(' ');
+            if (dateParts.length > 1) {
+                const ym = dateParts[0].split('-');
+                const hm = dateParts[1].split(':');
+                return `${ym[1]}/${ym[2]} ${hm[0]}:${hm[1]}`;
+            }
+            return 'Unknown';
+        });
+
+        const scores = historyData.map(entry => entry.stress_score);
+        const statuses = historyData.map(entry => entry.status || 'N/A');
+
+        // Update Analytics Cards
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const max = Math.max(...scores);
+        const latestStatus = statuses[statuses.length - 1];
+
+        document.getElementById('avgStress').innerText = avg.toFixed(1);
+        document.getElementById('maxStress').innerText = max.toFixed(1);
+        document.getElementById('currentStatus').innerText = latestStatus;
+
+        const statusEl = document.getElementById('currentStatus');
+        if (latestStatus === 'Healing Phase') statusEl.style.color = 'var(--secondary-color)';
+        else if (latestStatus === 'Relapse') statusEl.style.color = 'var(--danger-color)';
+
+        // Render Chart
+        const ctx = document.getElementById('stressTrendChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Stress Score',
+                    data: scores,
+                    borderColor: '#6C63FF',
+                    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: scores.length > 20 ? 2 : 5,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#6C63FF',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                return `Stress: ${context.parsed.y.toFixed(1)} (${statuses[context.dataIndex]})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { stepSize: 20 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+        });
+    </script>
+</body>
+
+</html>

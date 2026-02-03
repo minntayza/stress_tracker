@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Intelligent Stress System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+</head>
+
+<body>
+    <div class="container animate__animated animate__fadeIn" style="max-width: 450px; margin-top: 3rem;">
+        <div class="result-card" style="text-align: center;">
+            <h1 style="margin-bottom: 0.5rem;">🧠 Stress Tracker</h1>
+            <p style="color: #636e72; margin-bottom: 2rem;">Create your account</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}"
+                style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; {% if category == 'danger' %}background: #ff7675; color: white;{% elif category == 'success' %}background: #00b894; color: white;{% else %}background: #74b9ff; color: white;{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('signup') }}">
+                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                    <label for="username"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Choose a unique username"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1rem;">
+                    <small style="color: #636e72; margin-top: 0.25rem; display: block;">At least 3 characters,
+                        letters/numbers/underscores only</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                    <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="your.email@example.com"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                    <label for="password"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Create a strong password"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1rem;">
+                    <small style="color: #636e72; margin-top: 0.25rem; display: block;">At least 6 characters with
+                        letters and numbers</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
+                    <label for="confirm_password"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required
+                        placeholder="Re-enter your password"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1rem;">
+                </div>
+
+                <button type="submit" class="btn btn-primary-prominent" style="width: 100%; margin: 0;">
+                    Create Account
+                </button>
+            </form>
+
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #dfe6e9;">
+
+            <p style="color: #636e72;">
+                Already have an account?
+                <a href="{{ url_for('login') }}"
+                    style="color: var(--primary-color); font-weight: 600; text-decoration: none;">
+                    Login here
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
