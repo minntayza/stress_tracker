@@ -140,20 +140,44 @@ def analyze():
         mood = float(request.form.get('mood', 5))
         deadline_str = request.form.get('deadline', 'none')
         activity_str = request.form.get('activity', 'none')
+        social_interaction = float(request.form.get('social_interaction', 5))
+        financial_stress = float(request.form.get('financial_stress', 5))
+        age = int(request.form.get('age', 30))
+        procrastination_str = request.form.get('procrastination', 'medium')
+        quiz_values = []
+        for i in range(1, 21):
+            val = request.form.get(f'q{i}')
+            if val is None:
+                raise ValueError("Missing quiz response")
+            val_int = int(val)
+            if val_int < 1 or val_int > 5:
+                raise ValueError("Invalid quiz response")
+            quiz_values.append(val_int)
 
         # Map strings to numeric for fuzzy logic
         deadline_map = {'none': 0, 'upcoming': 5, 'urgent': 10}
         activity_map = {'none': 0, 'light': 3, 'moderate': 6, 'intense': 10}
+        procrastination_map = {'low': 2, 'medium': 5, 'high': 8}
         
         deadline_level = deadline_map.get(deadline_str, 0)
         activity_level = activity_map.get(activity_str, 0)
+        procrastination_level = procrastination_map.get(procrastination_str, 5)
+        quiz_sum = sum(quiz_values)
+        quiz_avg = quiz_sum / len(quiz_values)
+        quiz_score = max(0.0, min(100.0, ((quiz_avg - 1) / 4) * 100))
 
     except (ValueError, TypeError):
         flash('Invalid input. Please check your entries.', 'danger')
         return redirect(url_for('home'))
 
     # 2. Compute Stress (Fuzzy Logic)
-    stress_score = fuzzy_system.compute_stress(sleep_hours, study_hours, mood, deadline_level, activity_level, screen_time)
+    stress_score = fuzzy_system.compute_stress(
+        sleep_hours, study_hours, mood, deadline_level, activity_level, screen_time,
+        social_interaction, procrastination_level, financial_stress, age, quiz_score
+    )
+    lifestyle_instability = fuzzy_system.compute_instability(
+        social_interaction, procrastination_level, financial_stress, age
+    )
     
     # 3. Analyze Sentiment (Hybrid ML)
     sentiment = hybrid_engine.analyze_sentiment(journal_text)
@@ -178,6 +202,16 @@ def analyze():
     if screen_time > 8:
         recommendation += " Consider reducing screen time to improve well-being."
 
+    if quiz_score > 70:
+        recommendation += " Your quiz responses indicate high perceived stress—consider prioritizing recovery and support."
+    elif quiz_score > 40:
+        recommendation += " Your quiz responses indicate moderate stress—small daily changes can help."
+
+    if lifestyle_instability > 70:
+        recommendation += " Lifestyle instability is high—focus on reducing financial pressure and procrastination, and increase supportive social time."
+    elif lifestyle_instability > 40:
+        recommendation += " Lifestyle instability is moderate—small changes to routine and support systems can help."
+
     # 6. Adaptive Recommendation
     successful_strategy = history_manager.find_effective_strategies()
     adaptive_tip = None
@@ -185,13 +219,35 @@ def analyze():
         adaptive_tip = f"Last time, this helped you: '{successful_strategy}'"
 
     # 7. Save to History
-    history_manager.save_entry(stress_score, recommendation, healing_status)
+    history_manager.save_entry(
+        stress_score,
+        recommendation,
+        healing_status,
+        meta={
+            "sleep": sleep_hours,
+            "study": study_hours,
+            "screen_time": screen_time,
+            "mood": mood,
+            "deadline": deadline_str,
+            "activity": activity_str,
+            "social_interaction": social_interaction,
+            "procrastination_level": procrastination_level,
+            "procrastination_label": procrastination_str,
+            "financial_stress": financial_stress,
+            "age": age,
+            "lifestyle_instability": lifestyle_instability,
+            "quiz_score": quiz_score
+        }
+    )
     
     # 8. Update active goals
     update_user_goals(current_user.id, stress_score, history_manager)
 
     return render_template('result.html', 
                            stress_score=round(stress_score, 2),
+                           lifestyle_instability=round(lifestyle_instability, 2),
+                           instability_label=("High" if lifestyle_instability > 70 else "Moderate" if lifestyle_instability > 40 else "Low"),
+                           quiz_score=round(quiz_score, 2),
                            sentiment=sentiment,
                            healing_status=healing_status,
                            recommendation=recommendation,
@@ -203,6 +259,10 @@ def analyze():
                            mood=mood,
                            deadline=deadline_str,
                            activity=activity_str,
+                           social_interaction=social_interaction,
+                           procrastination=procrastination_str,
+                           financial_stress=financial_stress,
+                           age=age,
                            user=current_user)
 
 

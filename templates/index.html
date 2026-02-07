@@ -12,30 +12,33 @@
 
 <body>
     <!-- Navigation -->
-    <nav
-        style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 1rem 2rem; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-        <div
-            style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-            <div style="font-weight: 700; font-size: 1.2rem; color: var(--primary-color);">🧠 Stress Tracker</div>
-            <div style="display: flex; gap: 1.5rem; align-items: center;">
-                <a href="/" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">Home</a>
-                <a href="/history" style="text-decoration: none; color: #2d3436; font-weight: 500;">History</a>
-                <a href="/goals" style="text-decoration: none; color: #2d3436; font-weight: 500;">Goals</a>
-                <span style="color: #636e72;">{{ user.username }}</span>
-                <a href="/logout" style="text-decoration: none; color: #d63031; font-weight: 500;">Logout</a>
+    <nav class="nav-bar">
+        <div class="nav-inner">
+            <div class="brand">Stress Tracker</div>
+            <div class="nav-links">
+                <a href="/" class="active">Home</a>
+                <a href="/history">History</a>
+                <a href="/goals">Goals</a>
+                <span class="nav-user">{{ user.username }}</span>
+                <a href="/logout" class="nav-logout">Logout</a>
             </div>
         </div>
     </nav>
 
     <div class="container animate__animated animate__fadeInUp">
-        <h1>Stress Assessment</h1>
+        <div class="page-header stack">
+            <div>
+                <h1>Stress Assessment</h1>
+                <p class="page-subtitle">Answer a few questions to get a tailored stress readout and lifestyle signal.</p>
+            </div>
+        </div>
         {% if error %}
         <div class="result-card status-relapse">
             <div class="label" style="color: var(--danger-color);">Error</div>
             <p>{{ error }}</p>
         </div>
         {% endif %}
-        <form action="/analyze" method="POST">
+        <form action="/analyze" method="POST" class="form-card stagger">
             <div class="form-group">
                 <label for="sleep">💤 Hours of Sleep (0-12)</label>
                 <input type="number" id="sleep" name="sleep" min="0" max="12" step="0.1" required
@@ -79,6 +82,247 @@
                         <option value="moderate">Moderate</option>
                         <option value="intense">Intense</option>
                     </select>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="form-group">
+                    <label for="social_interaction">🤝 Social Interaction (0-10)</label>
+                    <input type="range" id="social_interaction" name="social_interaction" min="0" max="10" value="5"
+                        oninput="this.nextElementSibling.value = this.value">
+                    <output>5</output>
+                </div>
+
+                <div class="form-group">
+                    <label for="financial_stress">💸 Financial Stress (0-10)</label>
+                    <input type="range" id="financial_stress" name="financial_stress" min="0" max="10" value="5"
+                        oninput="this.nextElementSibling.value = this.value">
+                    <output>5</output>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="form-group">
+                    <label for="procrastination">⏱ Procrastination Level</label>
+                    <select id="procrastination" name="procrastination">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">🎂 Age</label>
+                    <input type="number" id="age" name="age" min="10" max="80" step="1" required
+                        placeholder="e.g., 21">
+                </div>
+            </div>
+
+            <div class="quiz-section">
+                <h2>Quick Stress Quiz (20 items)</h2>
+                <p class="quiz-hint">Rate each statement from 1 to 5. 1 = Not at all, 5 = Very much.</p>
+
+                <div class="quiz-grid">
+                    <div class="form-group">
+                        <label for="q1">1. I feel overwhelmed by my responsibilities.</label>
+                        <select id="q1" name="q1" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q2">2. I have trouble relaxing.</label>
+                        <select id="q2" name="q2" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q3">3. I worry about my finances.</label>
+                        <select id="q3" name="q3" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q4">4. I feel pressure from deadlines.</label>
+                        <select id="q4" name="q4" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q5">5. I put off tasks until the last minute.</label>
+                        <select id="q5" name="q5" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q6">6. I feel isolated or unsupported.</label>
+                        <select id="q6" name="q6" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q7">7. I have trouble concentrating.</label>
+                        <select id="q7" name="q7" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q8">8. I feel irritable or short-tempered.</label>
+                        <select id="q8" name="q8" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q9">9. I feel tired even after sleeping.</label>
+                        <select id="q9" name="q9" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q10">10. My workload feels unmanageable.</label>
+                        <select id="q10" name="q10" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q11">11. I feel like I have no control over my schedule.</label>
+                        <select id="q11" name="q11" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q12">12. I feel anxious about the future.</label>
+                        <select id="q12" name="q12" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q13">13. I skip meals or eat poorly due to stress.</label>
+                        <select id="q13" name="q13" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q14">14. I get headaches or body tension.</label>
+                        <select id="q14" name="q14" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q15">15. I spend more time on screens than I want to.</label>
+                        <select id="q15" name="q15" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q16">16. I feel guilty about my productivity.</label>
+                        <select id="q16" name="q16" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q17">17. I feel like I am falling behind.</label>
+                        <select id="q17" name="q17" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q18">18. I find it hard to start tasks.</label>
+                        <select id="q18" name="q18" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q19">19. I feel rushed throughout the day.</label>
+                        <select id="q19" name="q19" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="q20">20. I feel stressed when I think about my to-do list.</label>
+                        <select id="q20" name="q20" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

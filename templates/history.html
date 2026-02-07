@@ -12,29 +12,38 @@
 
 <body>
     <!-- Navigation -->
-    <nav
-        style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 1rem 2rem; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-        <div
-            style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-            <div style="font-weight: 700; font-size: 1.2rem; color: var(--primary-color);">🧠 Stress Tracker</div>
-            <div style="display: flex; gap: 1.5rem; align-items: center;">
-                <a href="/" style="text-decoration: none; color: #2d3436; font-weight: 500;">Home</a>
-                <a href="/history"
-                    style="text-decoration: none; color: var(--primary-color); font-weight: 600;">History</a>
-                <a href="/goals" style="text-decoration: none; color: #2d3436; font-weight: 500;">Goals</a>
-                <span style="color: #636e72;">{{ user.username }}</span>
-                <a href="/logout" style="text-decoration: none; color: #d63031; font-weight: 500;">Logout</a>
+    <nav class="nav-bar">
+        <div class="nav-inner">
+            <div class="brand">Stress Tracker</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/history" class="active">History</a>
+                <a href="/goals">Goals</a>
+                <span class="nav-user">{{ user.username }}</span>
+                <a href="/logout" class="nav-logout">Logout</a>
             </div>
         </div>
     </nav>
 
-    <div class="container animate__animated animate__fadeIn" style="max-width: 800px;">
-        <h1>Stress Analytics</h1>
+    <div class="container animate__animated animate__fadeIn">
+        <div class="page-header stack">
+            <div>
+                <h1>Stress Analytics</h1>
+                <p class="page-subtitle">Trends across stress, lifestyle instability, and key factors.</p>
+            </div>
+        </div>
 
-        <div class="result-card" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.9);">
-            <div class="label">Stress Level Trend</div>
+        <div class="result-card chart-card">
+            <div class="label">Stress & Lifestyle Instability Trend</div>
             <div style="height: 400px; position: relative; margin-top: 1rem;">
-                <canvas id="stressTrendChart"></canvas>
+                <canvas id="stressInstabilityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="result-card chart-card">
+            <div class="label">Multi-Factor Trend (Normalized 0-10)</div>
+            <div style="height: 380px; position: relative; margin-top: 1rem;">
+                <canvas id="factorTrendChart"></canvas>
             </div>
         </div>
 
@@ -57,103 +66,285 @@
             </div>
         </div>
 
+        <div class="result-card center-card">
+            <div class="label">Stress vs Screen Time Correlation</div>
+            <div class="score" id="correlationValue" style="font-size: 1.5rem;">--</div>
+            <p id="correlationNote" style="color: #636e72; margin-top: 0.5rem;"></p>
+        </div>
+
         <a href="/" class="btn" style="margin-top: 2rem;">Back to Assessment</a>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Safely parse data from backend
-            const historyData = {{ history_data | tojson | safe
-        }};
-        console.log("History data loaded:", historyData);
+        function pearsonCorrelation(xValues, yValues) {
+            const pairs = [];
+            for (let i = 0; i < xValues.length; i++) {
+                const x = xValues[i];
+                const y = yValues[i];
+                if (x === null || x === undefined || y === null || y === undefined) continue;
+                pairs.push([x, y]);
+            }
+            if (pairs.length < 2) return null;
 
-        if (!historyData || historyData.length === 0) {
-            document.getElementById('stressTrendChart').parentNode.style.display = 'none';
-            document.getElementById('noDataMessage').style.display = 'block';
-            return;
+            const xs = pairs.map(p => p[0]);
+            const ys = pairs.map(p => p[1]);
+            const xMean = xs.reduce((a, b) => a + b, 0) / xs.length;
+            const yMean = ys.reduce((a, b) => a + b, 0) / ys.length;
+
+            let num = 0;
+            let xDen = 0;
+            let yDen = 0;
+            for (let i = 0; i < pairs.length; i++) {
+                const xDiff = xs[i] - xMean;
+                const yDiff = ys[i] - yMean;
+                num += xDiff * yDiff;
+                xDen += xDiff * xDiff;
+                yDen += yDiff * yDiff;
+            }
+
+            const den = Math.sqrt(xDen * yDen);
+            if (den === 0) return null;
+            return num / den;
         }
 
-        const labels = historyData.map(entry => {
-            // Shorten dates: "2026-02-02 22:04:50" -> "02/02 22:04"
-            const dateParts = (entry.date || '').split(' ');
-            if (dateParts.length > 1) {
-                const ym = dateParts[0].split('-');
-                const hm = dateParts[1].split(':');
-                return `${ym[1]}/${ym[2]} ${hm[0]}:${hm[1]}`;
+        document.addEventListener('DOMContentLoaded', function () {
+            const historyData = {{ history_data | tojson | safe }};
+            console.log("History data loaded:", historyData);
+
+            const rootStyles = getComputedStyle(document.documentElement);
+            const chartPrimary = rootStyles.getPropertyValue('--chart-primary').trim() || '#102a2a';
+            const chartSecondary = rootStyles.getPropertyValue('--chart-secondary').trim() || '#c76d2b';
+            const chartTertiary = rootStyles.getPropertyValue('--chart-tertiary').trim() || '#4f6f64';
+            const chartMuted = rootStyles.getPropertyValue('--chart-muted').trim() || '#8b7f73';
+            const chartSoft = rootStyles.getPropertyValue('--chart-soft').trim() || '#d9b99b';
+
+            if (!historyData || historyData.length === 0) {
+                const stressChartEl = document.getElementById('stressInstabilityChart');
+                const factorChartEl = document.getElementById('factorTrendChart');
+                if (stressChartEl) stressChartEl.parentNode.style.display = 'none';
+                if (factorChartEl) factorChartEl.parentNode.style.display = 'none';
+                document.getElementById('noDataMessage').style.display = 'block';
+                return;
             }
-            return 'Unknown';
-        });
 
-        const scores = historyData.map(entry => entry.stress_score);
-        const statuses = historyData.map(entry => entry.status || 'N/A');
+            const labels = historyData.map(entry => {
+                const dateParts = (entry.date || '').split(' ');
+                if (dateParts.length > 1) {
+                    const ym = dateParts[0].split('-');
+                    const hm = dateParts[1].split(':');
+                    return `${ym[1]}/${ym[2]} ${hm[0]}:${hm[1]}`;
+                }
+                return 'Unknown';
+            });
 
-        // Update Analytics Cards
-        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-        const max = Math.max(...scores);
-        const latestStatus = statuses[statuses.length - 1];
+            const stressScores = historyData.map(entry => entry.stress_score);
+            const lifestyleScores = historyData.map(entry => entry.lifestyle_instability ?? null);
+            const statuses = historyData.map(entry => entry.status || 'N/A');
+            const screenTime = historyData.map(entry => entry.screen_time ?? null);
+            const financialStress = historyData.map(entry => entry.financial_stress ?? null);
+            const socialInteraction = historyData.map(entry => entry.social_interaction ?? null);
+            const procrastination = historyData.map(entry => entry.procrastination_level ?? null);
+            const quizScores = historyData.map(entry => entry.quiz_score ?? null);
 
-        document.getElementById('avgStress').innerText = avg.toFixed(1);
-        document.getElementById('maxStress').innerText = max.toFixed(1);
-        document.getElementById('currentStatus').innerText = latestStatus;
+            const stressNorm = stressScores.map(v => v !== null && v !== undefined ? v / 10 : null);
+            const screenNorm = screenTime.map(v => v !== null && v !== undefined ? (v / 24) * 10 : null);
+            const quizNorm = quizScores.map(v => v !== null && v !== undefined ? v / 10 : null);
 
-        const statusEl = document.getElementById('currentStatus');
-        if (latestStatus === 'Healing Phase') statusEl.style.color = 'var(--secondary-color)';
-        else if (latestStatus === 'Relapse') statusEl.style.color = 'var(--danger-color)';
+            // Update Analytics Cards
+            const avg = stressScores.reduce((a, b) => a + b, 0) / stressScores.length;
+            const max = Math.max(...stressScores);
+            const latestStatus = statuses[statuses.length - 1];
 
-        // Render Chart
-        const ctx = document.getElementById('stressTrendChart').getContext('2d');
+            document.getElementById('avgStress').innerText = avg.toFixed(1);
+            document.getElementById('maxStress').innerText = max.toFixed(1);
+            document.getElementById('currentStatus').innerText = latestStatus;
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Stress Score',
-                    data: scores,
-                    borderColor: '#6C63FF',
-                    backgroundColor: 'rgba(108, 99, 255, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: scores.length > 20 ? 2 : 5,
-                    pointHoverRadius: 8,
-                    pointBackgroundColor: '#6C63FF',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function (context) {
-                                return `Stress: ${context.parsed.y.toFixed(1)} (${statuses[context.dataIndex]})`;
+            const statusEl = document.getElementById('currentStatus');
+            if (latestStatus === 'Healing Phase') statusEl.style.color = 'var(--secondary-color)';
+            else if (latestStatus === 'Relapse') statusEl.style.color = 'var(--danger-color)';
+
+            // Chart 1: Stress & Lifestyle Instability
+            const ctx1 = document.getElementById('stressInstabilityChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Stress Score',
+                            data: stressScores,
+                            borderColor: chartPrimary,
+                            backgroundColor: 'rgba(16, 42, 42, 0.08)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: stressScores.length > 20 ? 2 : 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: chartPrimary,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Lifestyle Instability',
+                            data: lifestyleScores,
+                            borderColor: chartSecondary,
+                            backgroundColor: 'rgba(199, 109, 43, 0.08)',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: lifestyleScores.length > 20 ? 2 : 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: chartSecondary,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function (context) {
+                                    if (context.dataset.label === 'Stress Score') {
+                                        return `Stress: ${context.parsed.y.toFixed(1)} (${statuses[context.dataIndex]})`;
+                                    }
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 10
                             }
                         }
                     }
+                }
+            });
+
+            // Chart 2: Multi-Factor Trend (Normalized)
+            const ctx2 = document.getElementById('factorTrendChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Stress (0-10)',
+                            data: stressNorm,
+                            borderColor: chartPrimary,
+                            backgroundColor: 'rgba(16, 42, 42, 0.08)',
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Screen Time (0-10)',
+                            data: screenNorm,
+                            borderColor: chartMuted,
+                            backgroundColor: 'rgba(139, 127, 115, 0.08)',
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Financial Stress (0-10)',
+                            data: financialStress,
+                            borderColor: chartSecondary,
+                            backgroundColor: 'rgba(199, 109, 43, 0.08)',
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Social Interaction (0-10)',
+                            data: socialInteraction,
+                            borderColor: chartTertiary,
+                            backgroundColor: 'rgba(79, 111, 100, 0.08)',
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Procrastination (0-10)',
+                            data: procrastination,
+                            borderColor: chartSoft,
+                            backgroundColor: 'rgba(217, 185, 155, 0.12)',
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Quiz Stress (0-10)',
+                            data: quizNorm,
+                            borderColor: chartMuted,
+                            backgroundColor: 'rgba(139, 127, 115, 0.12)',
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: { stepSize: 20 },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { mode: 'index', intersect: false }
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45,
-                            autoSkip: true,
-                            maxTicksLimit: 10
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: { stepSize: 2 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
                         }
                     }
                 }
+            });
+
+            // Correlation: Stress vs Screen Time
+            const correlationValue = document.getElementById('correlationValue');
+            const correlationNote = document.getElementById('correlationNote');
+            const corr = pearsonCorrelation(stressScores, screenTime);
+
+            if (corr === null) {
+                correlationValue.innerText = '--';
+                correlationNote.innerText = 'Not enough data to compute correlation.';
+            } else {
+                const rounded = corr.toFixed(2);
+                correlationValue.innerText = `r = ${rounded}`;
+                if (corr > 0.3) correlationNote.innerText = 'Positive correlation: higher screen time tends to align with higher stress.';
+                else if (corr < -0.3) correlationNote.innerText = 'Negative correlation: higher screen time tends to align with lower stress.';
+                else correlationNote.innerText = 'Weak correlation: screen time does not strongly align with stress in this data.';
             }
-        });
         });
     </script>
 </body>

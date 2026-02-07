@@ -10,16 +10,15 @@
 </head>
 
 <body>
-    <div class="container animate__animated animate__fadeIn" style="max-width: 450px; margin-top: 5rem;">
-        <div class="result-card" style="text-align: center;">
-            <h1 style="margin-bottom: 0.5rem;">🧠 Stress Tracker</h1>
-            <p style="color: #636e72; margin-bottom: 2rem;">Login to your account</p>
+    <div class="container container-auth animate__animated animate__fadeIn">
+        <div class="result-card auth-card">
+            <h1 class="auth-title">Stress Tracker</h1>
+            <p class="auth-subtitle">Login to your account</p>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}"
-                style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; {% if category == 'danger' %}background: #ff7675; color: white;{% elif category == 'success' %}background: #00b894; color: white;{% else %}background: #74b9ff; color: white;{% endif %}">
+            <div class="alert alert-{{ category }}">
                 {{ message }}
             </div>
             {% endfor %}
@@ -27,21 +26,17 @@
             {% endwith %}
 
             <form method="POST" action="{{ url_for('login') }}">
-                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
-                    <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username or
-                        Email</label>
-                    <input type="text" id="username" name="username" required
-                        style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1rem;">
+                <div class="form-group">
+                    <label for="username">Username or Email</label>
+                    <input type="text" id="username" name="username" required>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
-                    <label for="password"
-                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
-                    <input type="password" id="password" name="password" required
-                        style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1rem;">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
+                <div class="form-group">
                     <label style="display: flex; align-items: center; cursor: pointer;">
                         <input type="checkbox" name="remember" style="margin-right: 0.5rem;">
                         <span>Remember me</span>
@@ -53,9 +48,9 @@
                 </button>
             </form>
 
-            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #dfe6e9;">
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--line);">
 
-            <p style="color: #636e72;">
+            <p style="color: var(--gray-600); text-align: center;">
                 Don't have an account?
                 <a href="{{ url_for('signup') }}"
                     style="color: var(--primary-color); font-weight: 600; text-decoration: none;">

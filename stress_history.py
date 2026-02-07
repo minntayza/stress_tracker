@@ -30,12 +30,13 @@ class StressHistory:
         except (json.JSONDecodeError, IOError):
             return []
 
-    def save_entry(self, stress_score, recommendation, status="Unknown"):
+    def save_entry(self, stress_score, recommendation, status="Unknown", meta=None):
         """
         Save a new entry to the history.
         :param stress_score: float
         :param recommendation: str
         :param status: str (e.g. "Healing Phase", "Relapse", "Initial")
+        :param meta: dict with optional extra fields (inputs/outputs)
         """
         entry = {
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -43,6 +44,8 @@ class StressHistory:
             "recommendation": recommendation,
             "status": status
         }
+        if meta:
+            entry.update(meta)
         self.history.append(entry)
         self.save_history()
 
