@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Step 1 — Lifestyle · MindCheck{% endblock %}
+
+{% block content %}
+<div class="container wizard-container py-5">
+    <!-- Progress -->
+    <div class="wizard-progress mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="wizard-step-label">Step 1 of 4 &mdash; Lifestyle</span>
+            <span class="wizard-pct">25%</span>
+        </div>
+        <div class="progress wizard-bar">
+            <div class="progress-bar bg-accent" style="width: 25%;"></div>
+        </div>
+        <div class="wizard-dots mt-3">
+            <span class="wdot active" title="Lifestyle"></span>
+            <span class="wdot" title="Feelings"></span>
+            <span class="wdot" title="Quiz"></span>
+            <span class="wdot" title="Results"></span>
+        </div>
+    </div>
+
+    <div class="wizard-card">
+        <div class="wizard-card-header">
+            <div class="wizard-icon">🌙</div>
+            <div>
+                <h1 class="wizard-title">Your Lifestyle Today</h1>
+                <p class="wizard-subtitle">Tell us about your sleep, study, and screen habits.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('assess_step1') }}" novalidate id="step1Form">
+            <!-- Sleep -->
+            <div class="field-group">
+                <label class="field-label" for="sleep">
+                    💤 Hours of Sleep
+                </label>
+                <div class="stepper-wrap">
+                    <button type="button" class="stepper-btn" data-target="sleep" data-op="dec">−</button>
+                    <input type="number" id="sleep" name="sleep" class="stepper-input" step="0.5" min="0" max="12"
+                        value="{{ data.get('sleep', '') }}" required placeholder="7.5">
+                    <button type="button" class="stepper-btn" data-target="sleep" data-op="inc">+</button>
+                </div>
+                <p class="field-hint">Valid range: 0 – 12 hours &nbsp;·&nbsp; Recommended: 7–9 h</p>
+            </div>
+
+            <!-- Study -->
+            <div class="field-group">
+                <label class="field-label" for="study">
+                    📚 Hours of Study / Work
+                </label>
+                <div class="stepper-wrap">
+                    <button type="button" class="stepper-btn" data-target="study" data-op="dec">−</button>
+                    <input type="number" id="study" name="study" class="stepper-input" step="0.5" min="0" max="16"
+                        value="{{ data.get('study', '') }}" required placeholder="4.0">
+                    <button type="button" class="stepper-btn" data-target="study" data-op="inc">+</button>
+                </div>
+                <p class="field-hint">Valid range: 0 – 16 hours</p>
+            </div>
+
+            <!-- Screen time -->
+            <div class="field-group">
+                <label class="field-label" for="screen_time">
+                    📱 Screen Time (hours)
+                </label>
+                <div class="stepper-wrap">
+                    <button type="button" class="stepper-btn" data-target="screen_time" data-op="dec">−</button>
+                    <input type="number" id="screen_time" name="screen_time" class="stepper-input" step="0.5" min="0"
+                        max="24" value="{{ data.get('screen_time', '') }}" required placeholder="4.0">
+                    <button type="button" class="stepper-btn" data-target="screen_time" data-op="inc">+</button>
+                </div>
+                <p class="field-hint">Includes phone, laptop, TV · Valid range: 0 – 24 hours</p>
+            </div>
+
+            <div class="wizard-actions mt-4">
+                <button type="submit" class="btn btn-wizard-primary">
+                    Next: Feelings &amp; Pressures <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='wizard.js') }}"></script>
+{% endblock %}

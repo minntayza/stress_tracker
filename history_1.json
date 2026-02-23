@@ -78,5 +78,24 @@
         "age": 21,
         "lifestyle_instability": 49.99999999999999,
         "quiz_score": 50.0
+    },
+    {
+        "date": "2026-02-18 22:05:45",
+        "stress_score": 68.39204424590515,
+        "recommendation": "Moderate stress. Maintain a balanced schedule. Warning: Stress levels have increased since last time. Your quiz responses indicate moderate stress\u2014small daily changes can help. Lifestyle instability is moderate\u2014small changes to routine and support systems can help.",
+        "status": "Relapse",
+        "sleep": 8.0,
+        "study": 5.0,
+        "screen_time": 4.0,
+        "mood": 5.0,
+        "deadline": "urgent",
+        "activity": "light",
+        "social_interaction": 5.0,
+        "procrastination_level": 5,
+        "procrastination_label": "medium",
+        "financial_stress": 5.0,
+        "age": 20,
+        "lifestyle_instability": 49.99999999999999,
+        "quiz_score": 50.0
     }
 ]

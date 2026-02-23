@@ -1,64 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}Sign In · MindCheck{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Intelligent Stress System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-</head>
+{% block content %}
+<div class="container container-auth py-5">
+    <div class="auth-card result-card">
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-subtitle">Sign in to your MindCheck account</p>
 
-<body>
-    <div class="container container-auth animate__animated animate__fadeIn">
-        <div class="result-card auth-card">
-            <h1 class="auth-title">Stress Tracker</h1>
-            <p class="auth-subtitle">Login to your account</p>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
+        <form method="POST" action="{{ url_for('login') }}" novalidate>
+            <div class="field-group">
+                <label class="field-label" for="username">Username or Email</label>
+                <input type="text" id="username" name="username" class="form-control field-input"
+                    placeholder="you@example.com" required autocomplete="username">
             </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
 
-            <form method="POST" action="{{ url_for('login') }}">
-                <div class="form-group">
-                    <label for="username">Username or Email</label>
-                    <input type="text" id="username" name="username" required>
+            <div class="field-group">
+                <label class="field-label" for="password">Password</label>
+                <div class="pw-wrap">
+                    <input type="password" id="password" name="password" class="form-control field-input"
+                        placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye" id="pwIcon"></i>
+                    </button>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <label class="d-flex align-items-center gap-2 small text-muted">
+                    <input type="checkbox" name="remember"> Remember me
+                </label>
+            </div>
 
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" name="remember" style="margin-right: 0.5rem;">
-                        <span>Remember me</span>
-                    </label>
-                </div>
+            <button type="submit" class="btn btn-wizard-primary w-100">
+                Sign In <i class="bi bi-arrow-right ms-1"></i>
+            </button>
 
-                <button type="submit" class="btn btn-primary-prominent" style="width: 100%; margin: 0;">
-                    Login
-                </button>
-            </form>
-
-            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--line);">
-
-            <p style="color: var(--gray-600); text-align: center;">
+            <p class="text-center small text-muted mt-4">
                 Don't have an account?
-                <a href="{{ url_for('signup') }}"
-                    style="color: var(--primary-color); font-weight: 600; text-decoration: none;">
-                    Sign up here
-                </a>
+                <a href="{{ url_for('signup') }}" class="link-accent">Create one</a>
             </p>
-        </div>
+        </form>
     </div>
-</body>
+</div>
+{% endblock %}
 
-</html>
+{% block extra_scripts %}
+<script>
+    const btn = document.getElementById('pwToggle');
+    const inp = document.getElementById('password');
+    const ico = document.getElementById('pwIcon');
+    btn && btn.addEventListener('click', () => {
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    });
+</script>
+{% endblock %}

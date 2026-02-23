@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Step 2 — Feelings & Pressures · MindCheck{% endblock %}
+
+{% block content %}
+<div class="container wizard-container py-5">
+    <!-- Progress -->
+    <div class="wizard-progress mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="wizard-step-label">Step 2 of 4 &mdash; Feelings &amp; Pressures</span>
+            <span class="wizard-pct">50%</span>
+        </div>
+        <div class="progress wizard-bar">
+            <div class="progress-bar bg-accent" style="width: 50%;"></div>
+        </div>
+        <div class="wizard-dots mt-3">
+            <span class="wdot done" title="Lifestyle"><i class="bi bi-check-lg"></i></span>
+            <span class="wdot active" title="Feelings"></span>
+            <span class="wdot" title="Quiz"></span>
+            <span class="wdot" title="Results"></span>
+        </div>
+    </div>
+
+    <div class="wizard-card">
+        <div class="wizard-card-header">
+            <div class="wizard-icon">💭</div>
+            <div>
+                <h1 class="wizard-title">How Are You Feeling?</h1>
+                <p class="wizard-subtitle">Rate your emotional and social pressures right now.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('assess_step2') }}" novalidate id="step2Form">
+
+            <!-- Mood slider -->
+            <div class="field-group">
+                <label class="field-label" for="mood">
+                    😊 Mood <span class="slider-live-val" id="moodVal">{{ data.get('mood', 5) }}</span>/10
+                </label>
+                <input type="range" class="form-range custom-slider" id="mood" name="mood" min="1" max="10" step="1"
+                    value="{{ data.get('mood', 5) }}"
+                    oninput="document.getElementById('moodVal').textContent = this.value">
+                <div class="slider-labels">
+                    <span>1 · Very low</span>
+                    <span>10 · Excellent</span>
+                </div>
+                <p class="field-hint">1 = Very sad / anxious &nbsp;·&nbsp; 10 = Happy and energised</p>
+            </div>
+
+            <!-- Social support slider -->
+            <div class="field-group">
+                <label class="field-label" for="social_interaction">
+                    🤝 Social Support <span class="slider-live-val" id="socialVal">{{ data.get('social_interaction', 5)
+                        }}</span>/10
+                </label>
+                <input type="range" class="form-range custom-slider" id="social_interaction" name="social_interaction"
+                    min="0" max="10" step="1" value="{{ data.get('social_interaction', 5) }}"
+                    oninput="document.getElementById('socialVal').textContent = this.value">
+                <div class="slider-labels">
+                    <span>0 · Isolated</span>
+                    <span>10 · Very supported</span>
+                </div>
+                <p class="field-hint">How connected and supported do you feel?</p>
+            </div>
+
+            <!-- Financial stress slider -->
+            <div class="field-group">
+                <label class="field-label" for="financial_stress">
+                    💸 Financial Stress <span class="slider-live-val" id="finVal">{{ data.get('financial_stress', 5)
+                        }}</span>/10
+                </label>
+                <input type="range" class="form-range custom-slider" id="financial_stress" name="financial_stress"
+                    min="0" max="10" step="1" value="{{ data.get('financial_stress', 5) }}"
+                    oninput="document.getElementById('finVal').textContent = this.value">
+                <div class="slider-labels">
+                    <span>0 · None</span>
+                    <span>10 · Severe</span>
+                </div>
+                <p class="field-hint">How much is money worrying you right now?</p>
+            </div>
+
+            <!-- Deadline pressure chips -->
+            <div class="field-group">
+                <label class="field-label">⏳ Deadline Pressure</label>
+                <div class="chip-group" role="group" aria-label="Deadline pressure">
+                    {% set cur_dl = data.get('deadline', 'none') %}
+                    <button type="button" class="chip {% if cur_dl == 'none' %}chip--active{% endif %}"
+                        data-target="deadline" data-value="none">None</button>
+                    <button type="button" class="chip {% if cur_dl == 'upcoming' %}chip--active{% endif %}"
+                        data-target="deadline" data-value="upcoming">Upcoming</button>
+                    <button type="button" class="chip {% if cur_dl == 'urgent' %}chip--active{% endif %}"
+                        data-target="deadline" data-value="urgent">🔴 Urgent</button>
+                </div>
+                <input type="hidden" id="deadline" name="deadline" value="{{ cur_dl }}">
+                <p class="field-hint">Do you have an imminent deadline?</p>
+            </div>
+
+            <!-- Activity level chips -->
+            <div class="field-group">
+                <label class="field-label">🏃 Physical Activity</label>
+                <div class="chip-group" role="group" aria-label="Physical activity">
+                    {% set cur_act = data.get('activity', 'none') %}
+                    <button type="button" class="chip {% if cur_act == 'none' %}chip--active{% endif %}"
+                        data-target="activity" data-value="none">None / Sedentary</button>
+                    <button type="button" class="chip {% if cur_act == 'light' %}chip--active{% endif %}"
+                        data-target="activity" data-value="light">Light</button>
+                    <button type="button" class="chip {% if cur_act == 'moderate' %}chip--active{% endif %}"
+                        data-target="activity" data-value="moderate">Moderate</button>
+                    <button type="button" class="chip {% if cur_act == 'intense' %}chip--active{% endif %}"
+                        data-target="activity" data-value="intense">Intense</button>
+                </div>
+                <input type="hidden" id="activity" name="activity" value="{{ cur_act }}">
+                <p class="field-hint">What was your level of physical activity today?</p>
+            </div>
+
+            <!-- Procrastination chips -->
+            <div class="field-group">
+                <label class="field-label">⏱ Procrastination Level</label>
+                <div class="chip-group" role="group" aria-label="Procrastination">
+                    {% set cur_proc = data.get('procrastination', 'medium') %}
+                    <button type="button" class="chip {% if cur_proc == 'low' %}chip--active{% endif %}"
+                        data-target="procrastination" data-value="low">Low</button>
+                    <button type="button" class="chip {% if cur_proc == 'medium' %}chip--active{% endif %}"
+                        data-target="procrastination" data-value="medium">Medium</button>
+                    <button type="button" class="chip {% if cur_proc == 'high' %}chip--active{% endif %}"
+                        data-target="procrastination" data-value="high">High</button>
+                </div>
+                <input type="hidden" id="procrastination" name="procrastination" value="{{ cur_proc }}">
+                <p class="field-hint">How often are you avoiding tasks you should be doing?</p>
+            </div>
+
+            <!-- Age -->
+            <div class="field-group">
+                <label class="field-label" for="age">🎂 Your Age</label>
+                <div class="stepper-wrap" style="max-width: 220px;">
+                    <button type="button" class="stepper-btn" data-target="age" data-op="dec">−</button>
+                    <input type="number" id="age" name="age" class="stepper-input" min="10" max="80" step="1"
+                        value="{{ data.get('age', '') }}" required placeholder="e.g. 21">
+                    <button type="button" class="stepper-btn" data-target="age" data-op="inc">+</button>
+                </div>
+                <p class="field-hint">Valid range: 10 – 80 years</p>
+            </div>
+
+            <div class="wizard-actions mt-4 d-flex gap-3">
+                <a href="{{ url_for('assess_step1') }}" class="btn btn-wizard-ghost">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <button type="submit" class="btn btn-wizard-primary flex-fill">
+                    Next: Stress Quiz <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='wizard.js') }}"></script>
+{% endblock %}

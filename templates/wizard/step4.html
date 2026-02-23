@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Your Results · MindCheck{% endblock %}
+
+{% block content %}
+<div class="container wizard-container py-5">
+    <!-- Progress complete -->
+    <div class="wizard-progress mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="wizard-step-label">Step 4 of 4 &mdash; Your Results</span>
+            <span class="wizard-pct">100%</span>
+        </div>
+        <div class="progress wizard-bar">
+            <div class="progress-bar bg-accent" style="width: 100%;"></div>
+        </div>
+        <div class="wizard-dots mt-3">
+            <span class="wdot done" title="Lifestyle"><i class="bi bi-check-lg"></i></span>
+            <span class="wdot done" title="Feelings"><i class="bi bi-check-lg"></i></span>
+            <span class="wdot done" title="Quiz"><i class="bi bi-check-lg"></i></span>
+            <span class="wdot done active" title="Results"><i class="bi bi-check-lg"></i></span>
+        </div>
+    </div>
+
+    <!-- Result type label -->
+    <div class="result-type-banner mb-4
+        {% if result.quiz_completed %}result-type-full{% else %}result-type-estimated{% endif %}">
+        <i
+            class="bi {% if result.quiz_completed %}bi-patch-check-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+        {{ result.result_type }}
+        {% if not result.quiz_completed %}
+        &nbsp;&mdash;&nbsp;
+        <a href="{{ url_for('assess_step3') }}" class="retake-link">Take the quiz for a full result →</a>
+        {% endif %}
+    </div>
+
+    <!-- ── Main stress score card ───────────────────────────────────────── -->
+    <div class="result-hero-card mb-4">
+        <div class="result-hero-left">
+            <div class="label mb-1">Your Stress Score</div>
+            <div class="result-big-score">{{ result.stress_score }}<span class="score-denom">/100</span></div>
+            <div class="progress stress-score-bar mt-3" style="height: 14px; border-radius: 99px;">
+                <div class="progress-bar {{ 'bg-danger' if result.stress_label == 'High' else 'bg-warning' if result.stress_label == 'Moderate' else 'bg-success' }}"
+                    id="scoreBar" style="width: 0%; transition: width 1.4s cubic-bezier(.4,0,.2,1);"></div>
+            </div>
+        </div>
+        <div class="result-hero-right">
+            <div class="stress-badge {{ result.badge_class }}">
+                {% if result.stress_label == 'High' %}🔴
+                {% elif result.stress_label == 'Moderate' %}🟡
+                {% else %}🟢{% endif %}
+                {{ result.stress_label }}
+            </div>
+            <div class="healing-tag mt-3
+                {% if result.healing_status == 'Healing Phase' %}tag-healing
+                {% elif result.healing_status == 'Relapse' %}tag-relapse
+                {% else %}tag-neutral{% endif %}">
+                {% if result.healing_status == 'Healing Phase' %}📈 Improving
+                {% elif result.healing_status == 'Relapse' %}📉 Rising
+                {% else %}→ {{ result.healing_status }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Plain-language explanation -->
+    <div class="result-card explanation-card mb-4">
+        <div class="label mb-2">What This Means</div>
+        <p>{{ result.explanation | safe }}</p>
+        {% if result.adaptive_tip %}
+        <div class="tip-card adaptive-tip mt-3">
+            <span class="tip-icon">💡</span>
+            <span>{{ result.adaptive_tip }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Contributing factors -->
+        <div class="col-md-6">
+            <div class="result-card h-100">
+                <div class="label mb-3">🎯 Top Contributing Factors</div>
+                <ul class="factors-list">
+                    {% for label, note in result.factors %}
+                    <li class="factor-item">
+                        <span class="factor-label">{{ label }}</span>
+                        <span class="factor-note">{{ note }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Actionable tips -->
+        <div class="col-md-6">
+            <div class="result-card h-100">
+                <div class="label mb-3">✅ Action Steps for You</div>
+                <ul class="tips-list">
+                    {% for tip in result.tips %}
+                    <li class="tip-item">{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary scores row -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+            <div class="result-card mini-stat text-center">
+                <div class="label">Lifestyle Instability</div>
+                <div class="mini-score">{{ result.lifestyle_instability }}<span>/100</span></div>
+                <div
+                    class="mini-label {{ 'text-danger' if result.instability_label == 'High' else 'text-warning' if result.instability_label == 'Moderate' else 'text-success' }}">
+                    {{ result.instability_label }}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="result-card mini-stat text-center">
+                <div class="label">Quiz Score</div>
+                {% if result.quiz_score is not none %}
+                <div class="mini-score">{{ result.quiz_score }}<span>/100</span></div>
+                <div class="mini-label text-muted">Quiz completed</div>
+                {% else %}
+                <div class="mini-score text-muted">—</div>
+                <div class="mini-label text-muted">Quiz skipped</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- CTAs -->
+    <p class="small text-muted mb-3">
+        {% if autosaved_now %}
+        Saved automatically. Your trends are already updated.
+        {% else %}
+        Already saved. Your trends include this result.
+        {% endif %}
+    </p>
+    <div class="result-ctas d-flex flex-wrap gap-3 mt-2">
+        <a href="{{ url_for('history') }}" class="btn btn-wizard-secondary">
+            <i class="bi bi-graph-up me-1"></i>View My Trends
+        </a>
+        <a href="{{ url_for('assess_step3') }}" class="btn btn-wizard-ghost">
+            <i class="bi bi-arrow-repeat me-1"></i>Retake Quiz
+        </a>
+        <a href="{{ url_for('assess_step1') }}" class="btn btn-wizard-ghost">
+            <i class="bi bi-plus-circle me-1"></i>New Assessment
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='wizard.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bar = document.getElementById('scoreBar');
+        if (bar) {
+            setTimeout(() => {
+                bar.style.width = '{{ result.stress_score }}%';
+            }, 300);
+        }
+    });
+</script>
+{% endblock %}

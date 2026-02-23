@@ -1,76 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}Create Account · MindCheck{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Intelligent Stress System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-</head>
+{% block content %}
+<div class="container container-auth py-5">
+    <div class="auth-card result-card">
+        <h1 class="auth-title">Create your account</h1>
+        <p class="auth-subtitle">Start tracking and understanding your stress</p>
 
-<body>
-    <div class="container container-auth animate__animated animate__fadeIn">
-        <div class="result-card auth-card">
-            <h1 class="auth-title">Stress Tracker</h1>
-            <p class="auth-subtitle">Create your account</p>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
+        <form method="POST" action="{{ url_for('signup') }}" novalidate>
+            <div class="field-group">
+                <label class="field-label" for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control field-input" placeholder="yourname"
+                    required autocomplete="username" minlength="3" maxlength="80">
+                <p class="field-hint">3–80 characters, letters and numbers only</p>
             </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
 
-            <form method="POST" action="{{ url_for('signup') }}">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Choose a unique username"
-                        >
-                    <small style="color: var(--gray-600); margin-top: 0.25rem; display: block;">At least 3 characters,
-                        letters/numbers/underscores only</small>
+            <div class="field-group">
+                <label class="field-label" for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control field-input"
+                    placeholder="you@example.com" required autocomplete="email">
+            </div>
+
+            <div class="field-group">
+                <label class="field-label" for="password">Password</label>
+                <div class="pw-wrap">
+                    <input type="password" id="password" name="password" class="form-control field-input"
+                        placeholder="••••••••" required autocomplete="new-password" minlength="8">
+                    <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password">
+                        <i class="bi bi-eye" id="pwIcon"></i>
+                    </button>
                 </div>
+                <p class="field-hint">Minimum 8 characters</p>
+            </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required placeholder="your.email@example.com"
-                        >
-                </div>
+            <div class="field-group">
+                <label class="field-label" for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control field-input"
+                    placeholder="••••••••" required autocomplete="new-password">
+            </div>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Create a strong password"
-                        >
-                    <small style="color: var(--gray-600); margin-top: 0.25rem; display: block;">At least 6 characters with
-                        letters and numbers</small>
-                </div>
+            <button type="submit" class="btn btn-wizard-primary w-100 mt-2">
+                Create Account <i class="bi bi-person-plus ms-1"></i>
+            </button>
 
-                <div class="form-group">
-                    <label for="confirm_password">Confirm Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required
-                        placeholder="Re-enter your password"
-                        >
-                </div>
-
-                <button type="submit" class="btn btn-primary-prominent" style="width: 100%; margin: 0;">
-                    Create Account
-                </button>
-            </form>
-
-            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--line);">
-
-            <p style="color: var(--gray-600); text-align: center;">
+            <p class="text-center small text-muted mt-4">
                 Already have an account?
-                <a href="{{ url_for('login') }}"
-                    style="color: var(--primary-color); font-weight: 600; text-decoration: none;">
-                    Login here
-                </a>
+                <a href="{{ url_for('login') }}" class="link-accent">Sign in</a>
             </p>
-        </div>
+        </form>
     </div>
-</body>
+</div>
+{% endblock %}
 
-</html>
+{% block extra_scripts %}
+<script>
+    const btn = document.getElementById('pwToggle');
+    const inp = document.getElementById('password');
+    const ico = document.getElementById('pwIcon');
+    btn && btn.addEventListener('click', () => {
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    });
+</script>
+{% endblock %}

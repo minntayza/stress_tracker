@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Step 3 — Stress Quiz · MindCheck{% endblock %}
+
+{% block content %}
+<div class="container wizard-container py-5">
+    <!-- Progress -->
+    <div class="wizard-progress mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="wizard-step-label">Step 3 of 4 &mdash; Stress Quiz</span>
+            <span class="wizard-pct">75%</span>
+        </div>
+        <div class="progress wizard-bar">
+            <div class="progress-bar bg-accent" style="width: 75%;"></div>
+        </div>
+        <div class="wizard-dots mt-3">
+            <span class="wdot done" title="Lifestyle"><i class="bi bi-check-lg"></i></span>
+            <span class="wdot done" title="Feelings"><i class="bi bi-check-lg"></i></span>
+            <span class="wdot active" title="Quiz"></span>
+            <span class="wdot" title="Results"></span>
+        </div>
+    </div>
+
+    <!-- Optional badge + skip controls -->
+    <div class="quiz-optional-banner mb-4">
+        <div class="quiz-optional-inner">
+            <div>
+                <span class="badge-optional">Optional</span>
+                <strong class="ms-2">Stress Quiz</strong> &mdash; takes ~3 minutes
+            </div>
+            <p class="text-muted small mb-2">
+                Completing this quiz gives a more precise result. Skipping gives an
+                <em>estimated result</em> using your lifestyle data only.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <form method="POST" action="{{ url_for('skip_quiz') }}" style="display:inline;">
+                    <button type="submit" class="btn btn-skip">
+                        <i class="bi bi-skip-forward me-1"></i>Skip quiz (optional)
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('skip_quiz') }}" style="display:inline;">
+                    <button type="submit" class="btn btn-do-later">
+                        <i class="bi bi-clock me-1"></i>Do it later
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-card">
+        <div class="wizard-card-header">
+            <div class="wizard-icon">📝</div>
+            <div>
+                <h1 class="wizard-title">20-Question Stress Check</h1>
+                <p class="wizard-subtitle">Rate each statement: 1 = Not at all &nbsp;·&nbsp; 5 = Very much so</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('assess_step3') }}" novalidate id="quizForm">
+            <!-- Quiz items progress mini-bar -->
+            <div class="quiz-mini-progress mb-4">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                    <span id="answeredCount">0</span> / 20 answered
+                    <span id="quizPct">0%</span>
+                </div>
+                <div class="progress" style="height:6px; border-radius:99px;">
+                    <div class="progress-bar bg-accent" id="quizProgressBar" style="width:0%;transition:width .3s;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz-grid">
+                {% for q in questions %}
+                {% set i = loop.index %}
+
+                <div class="quiz-item" id="qi{{ i }}">
+                    <p class="quiz-q">{{ i }}. {{ q }}</p>
+                    <div class="likert-group" role="group" aria-label="Question {{ i }}">
+                        {% for v in range(1, 6) %}
+                        <label class="likert-label">
+                            <input type="radio" name="q{{ i }}" value="{{ v }}" class="likert-radio" data-qi="{{ i }}"
+                                required {% if data.get('q' ~ i)|string==v|string %}checked{% endif %}>
+                            <span class="likert-btn">
+                                <span class="likert-num">{{ v }}</span>
+                                <span class="likert-desc">{{ ['Not at all','Slightly','Somewhat','Quite a bit','Very
+                                    much'][v-1] }}</span>
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="wizard-actions mt-5 d-flex gap-3">
+                <a href="{{ url_for('assess_step2') }}" class="btn btn-wizard-ghost">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <button type="submit" class="btn btn-wizard-primary flex-fill" id="quizSubmitBtn">
+                    See My Results <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='wizard.js') }}"></script>
+<script>
+    // Track answered questions
+    const radios = document.querySelectorAll('.likert-radio');
+    const answered = new Set();
+
+    function updateQuizProgress() {
+        const total = 20;
+        const count = answered.size;
+        const pct = Math.round((count / total) * 100);
+        document.getElementById('answeredCount').textContent = count;
+        document.getElementById('quizPct').textContent = pct + '%';
+        document.getElementById('quizProgressBar').style.width = pct + '%';
+        // Mark item as answered
+    }
+
+    radios.forEach(r => {
+        r.addEventListener('change', () => {
+            answered.add(r.dataset.qi);
+            // Mark the quiz item card as answered
+            const item = document.getElementById('qi' + r.dataset.qi);
+            if (item) item.classList.add('qi-answered');
+            updateQuizProgress();
+        });
+    });
+</script>
+{% endblock %}

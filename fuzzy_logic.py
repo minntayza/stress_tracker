@@ -101,14 +101,17 @@ class StressFuzzySystem:
         # Low mood increases stress perception
         self.rule5 = ctrl.Rule(self.mood['low'], self.stress['high'])
         
-        # High activity helps reduce stress even if study is moderate
-        self.rule6 = ctrl.Rule(self.activity['high'] & self.study['moderate'], self.stress['low'])
+        # Protective activity effect should apply only under healthy baseline conditions
+        self.rule6 = ctrl.Rule(
+            self.activity['high'] & self.study['moderate'] & self.sleep['good'] & self.mood['high'],
+            self.stress['low']
+        )
 
         # Good mood and moderate activity can buffer stress
         self.rule7 = ctrl.Rule(self.mood['high'] & self.activity['moderate'], self.stress['low'])
         
-        # Combined Negative: Low mood + Urgent deadline = High Stress
-        self.rule8 = ctrl.Rule(self.mood['low'] & self.deadline['upcoming'], self.stress['high'])
+        # Combined Negative: Low mood + deadline pressure => High stress
+        self.rule8 = ctrl.Rule(self.mood['low'] & self.deadline['urgent'], self.stress['high'])
 
         # New Factor Rules
         self.rule9 = ctrl.Rule(self.social['low'] | self.financial['high'] | self.procrastination['high'], self.stress['high'])
@@ -120,13 +123,15 @@ class StressFuzzySystem:
         self.rule15 = ctrl.Rule(self.quiz['low'], self.stress['low'])
         self.rule16 = ctrl.Rule(self.quiz['moderate'], self.stress['moderate'])
         self.rule17 = ctrl.Rule(self.quiz['high'] & self.sleep['poor'], self.stress['high'])
+        self.rule18 = ctrl.Rule(self.activity['high'] & self.sleep['poor'], self.stress['high'])
+        self.rule19 = ctrl.Rule(self.mood['low'] & self.deadline['upcoming'], self.stress['high'])
 
         self.stress_ctrl = ctrl.ControlSystem([
             self.rule1, self.rule2, self.rule3, 
             self.rule_st1, self.rule_st2, self.rule_st3,
             self.rule4, self.rule5, self.rule6, self.rule7, self.rule8,
             self.rule9, self.rule10, self.rule11, self.rule12, self.rule13,
-            self.rule14, self.rule15, self.rule16, self.rule17
+            self.rule14, self.rule15, self.rule16, self.rule17, self.rule18, self.rule19
         ])
         self.stress_simulation = ctrl.ControlSystemSimulation(self.stress_ctrl)
 
