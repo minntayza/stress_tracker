@@ -597,6 +597,8 @@ def history_data():
 @app.route('/goals')
 @login_required
 def goals():
+    history_manager = StressHistory(user_id=current_user.id)
+    update_user_goals(current_user.id, 0, history_manager)
     user_goals = Goal.query.filter_by(user_id=current_user.id).order_by(Goal.created_at.desc()).all()
     return render_template('goals.html', goals=user_goals, user=current_user)
 
@@ -630,6 +632,16 @@ def create_goal():
         description=description,
         deadline=deadline
     )
+    history_manager = StressHistory(user_id=current_user.id)
+    history_data = history_manager.load_history()
+    if history_data:
+        avg_stress = sum(entry.get('stress_score', 0) for entry in history_data) / len(history_data)
+        new_goal.current_value = avg_stress
+
+    if new_goal.is_achieved():
+        new_goal.status = 'completed'
+        new_goal.completed_at = datetime.utcnow()
+
     db.session.add(new_goal)
     db.session.commit()
 
