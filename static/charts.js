@@ -1,5 +1,5 @@
 /**
- * charts.js - Trends page line charts with period filters and clear metadata.
+ * charts.js - Trends page grouped bar charts with period filters and clear metadata.
  */
 
 (function () {
@@ -17,9 +17,6 @@
         stress: cssVar("--chart-secondary", "#c76d2b"),
         stressAvg: cssVar("--chart-soft", "#d9b99b"),
         instability: cssVar("--chart-primary", "#102a2a"),
-        sleep: cssVar("--chart-tertiary", "#4f6f64"),
-        screen: cssVar("--chart-muted", "#8b7f73"),
-        mood: cssVar("--success-color", "#2f7d67"),
     };
 
     function getSeriesState() {
@@ -32,10 +29,7 @@
         const allValues = []
             .concat(series.stress || [])
             .concat(series.stress_ma7 || [])
-            .concat(series.instability || [])
-            .concat(series.sleep || [])
-            .concat(series.screen_time || [])
-            .concat(series.mood || []);
+            .concat(series.instability || []);
         return allValues.some((v) => v !== null && v !== undefined);
     }
 
@@ -43,12 +37,41 @@
         return (values || []).filter((v) => v !== null && v !== undefined).length;
     }
 
-    function updateStats(entries) {
+    function getValidPoints(values) {
+        return (values || [])
+            .map((v, i) => ({ x: i, y: v }))
+            .filter((point) => point.y !== null && point.y !== undefined);
+    }
+
+    function calculateTrendMeta(series) {
+        const points = getValidPoints(series?.stress || []);
+        if (points.length < 2) {
+            return {
+                label: "Trend not available yet",
+                tone: "muted",
+                delta: null,
+            };
+        }
+
+        const first = points[0].y;
+        const last = points[points.length - 1].y;
+        const delta = Number((last - first).toFixed(1));
+
+        if (delta <= -5) {
+            return { label: `Improving trend (${Math.abs(delta).toFixed(1)} pts down)`, tone: "good", delta };
+        }
+        if (delta >= 5) {
+            return { label: `Rising stress trend (${delta.toFixed(1)} pts up)`, tone: "bad", delta };
+        }
+        return { label: `Stable trend (Δ ${delta.toFixed(1)} pts)`, tone: "muted", delta };
+    }
+
+    function updateStats(entries, series) {
         const stressScores = entries.map((e) => e.stress_score).filter((v) => v != null);
         const sleepVals = entries.map((e) => e.sleep).filter((v) => v != null);
         const avgStress = stressScores.length ? stressScores.reduce((a, b) => a + b, 0) / stressScores.length : null;
-        const peakStress = stressScores.length ? Math.max(...stressScores) : null;
         const avgSleep = sleepVals.length ? sleepVals.reduce((a, b) => a + b, 0) / sleepVals.length : null;
+        const trendMeta = calculateTrendMeta(series || {});
 
         const setText = (id, value) => {
             const el = document.getElementById(id);
@@ -56,9 +79,23 @@
         };
 
         setText("avgStress", avgStress !== null ? avgStress.toFixed(1) : "-");
-        setText("peakStress", peakStress !== null ? peakStress.toFixed(1) : "-");
+        setText("stressDelta", trendMeta.delta !== null ? `${trendMeta.delta > 0 ? "+" : ""}${trendMeta.delta.toFixed(1)}` : "-");
         setText("avgSleep", avgSleep !== null ? `${avgSleep.toFixed(1)}h` : "-");
         setText("entryCount", entries.length);
+
+        const deltaEl = document.getElementById("stressDelta");
+        if (deltaEl) {
+            deltaEl.classList.remove("text-danger", "text-success", "text-muted");
+            if (trendMeta.delta === null) {
+                deltaEl.classList.add("text-muted");
+            } else if (trendMeta.delta > 0) {
+                deltaEl.classList.add("text-danger");
+            } else if (trendMeta.delta < 0) {
+                deltaEl.classList.add("text-success");
+            } else {
+                deltaEl.classList.add("text-muted");
+            }
+        }
     }
 
     function renderInsights(insights) {
@@ -73,11 +110,13 @@
         });
     }
 
-    function updatePeriodMeta(meta) {
+    function updatePeriodMeta(meta, series) {
         const rangeInfo = document.getElementById("rangeInfo");
         const periodHint = document.getElementById("periodHint");
+        const trendSummary = document.getElementById("trendSummary");
         const entryCount = meta.entries_in_period || 0;
         const entryWord = entryCount === 1 ? "entry" : "entries";
+        const trendMeta = calculateTrendMeta(series || {});
 
         if (rangeInfo) {
             rangeInfo.textContent = `Showing ${meta.days} days (${meta.period_start} to ${meta.period_end}) - ${entryCount} saved ${entryWord}`;
@@ -90,16 +129,16 @@
             }
             periodHint.textContent = hint;
         }
+        if (trendSummary) {
+            trendSummary.textContent = trendMeta.label;
+            trendSummary.classList.remove("text-success", "text-danger", "text-muted");
+            if (trendMeta.tone === "good") trendSummary.classList.add("text-success");
+            else if (trendMeta.tone === "bad") trendSummary.classList.add("text-danger");
+            else trendSummary.classList.add("text-muted");
+        }
     }
 
     function buildChartData(series, seriesState) {
-        const stressLine = countValidPoints(series.stress) >= 2;
-        const stressAvgLine = countValidPoints(series.stress_ma7) >= 2;
-        const instabilityLine = countValidPoints(series.instability) >= 2;
-        const sleepLine = countValidPoints(series.sleep) >= 2;
-        const screenLine = countValidPoints(series.screen_time) >= 2;
-        const moodLine = countValidPoints(series.mood) >= 2;
-
         return {
             labels: series.labels || [],
             datasets: [
@@ -108,16 +147,8 @@
                     data: series.stress || [],
                     yAxisID: "yStress",
                     borderColor: PALETTE.stress,
-                    backgroundColor: "transparent",
-                    borderWidth: 2.5,
-                    tension: 0.3,
-                    pointRadius: stressLine ? 4 : 5,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: PALETTE.stress,
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 1.5,
-                    spanGaps: false,
-                    showLine: stressLine,
+                    backgroundColor: PALETTE.stress,
+                    borderWidth: 1,
                     hidden: !seriesState[0],
                 },
                 {
@@ -125,17 +156,8 @@
                     data: series.stress_ma7 || [],
                     yAxisID: "yStress",
                     borderColor: PALETTE.stressAvg,
-                    backgroundColor: "transparent",
-                    borderDash: [4, 4],
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: stressAvgLine ? 3.5 : 5,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: PALETTE.stressAvg,
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 1.5,
-                    spanGaps: false,
-                    showLine: stressAvgLine,
+                    backgroundColor: PALETTE.stressAvg,
+                    borderWidth: 1,
                     hidden: !seriesState[1],
                 },
                 {
@@ -143,69 +165,9 @@
                     data: series.instability || [],
                     yAxisID: "yStress",
                     borderColor: PALETTE.instability,
-                    backgroundColor: "transparent",
-                    borderDash: [6, 4],
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: instabilityLine ? 4 : 5,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: PALETTE.instability,
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 1.5,
-                    spanGaps: false,
-                    showLine: instabilityLine,
+                    backgroundColor: PALETTE.instability,
+                    borderWidth: 1,
                     hidden: !seriesState[2],
-                },
-                {
-                    label: "Sleep (hours)",
-                    data: series.sleep || [],
-                    yAxisID: "yFactor",
-                    borderColor: PALETTE.sleep,
-                    backgroundColor: "transparent",
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: sleepLine ? 4 : 5,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: PALETTE.sleep,
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 1.5,
-                    spanGaps: false,
-                    showLine: sleepLine,
-                    hidden: !seriesState[3],
-                },
-                {
-                    label: "Screen Time (hours)",
-                    data: series.screen_time || [],
-                    yAxisID: "yFactor",
-                    borderColor: PALETTE.screen,
-                    backgroundColor: "transparent",
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: screenLine ? 4 : 5,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: PALETTE.screen,
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 1.5,
-                    spanGaps: false,
-                    showLine: screenLine,
-                    hidden: !seriesState[4],
-                },
-                {
-                    label: "Mood (1-10)",
-                    data: series.mood || [],
-                    yAxisID: "yFactor",
-                    borderColor: PALETTE.mood,
-                    backgroundColor: "transparent",
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: moodLine ? 4 : 5,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: PALETTE.mood,
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 1.5,
-                    spanGaps: false,
-                    showLine: moodLine,
-                    hidden: !seriesState[5],
                 },
             ],
         };
@@ -217,6 +179,34 @@
         const ctx = canvas.getContext("2d");
         const data = buildChartData(series, seriesState);
 
+        const stressBandsPlugin = {
+            id: "stressBands",
+            beforeDraw(chart) {
+                const yScale = chart.scales?.yStress;
+                const chartArea = chart.chartArea;
+                if (!yScale || !chartArea) return;
+
+                const { ctx } = chart;
+                const x = chartArea.left;
+                const width = chartArea.right - chartArea.left;
+
+                const ranges = [
+                    { min: 0, max: 40, color: "rgba(47, 125, 103, 0.08)" },
+                    { min: 40, max: 70, color: "rgba(214, 137, 16, 0.08)" },
+                    { min: 70, max: 100, color: "rgba(198, 70, 70, 0.08)" },
+                ];
+
+                ctx.save();
+                ranges.forEach((range) => {
+                    const yTop = yScale.getPixelForValue(range.max);
+                    const yBottom = yScale.getPixelForValue(range.min);
+                    ctx.fillStyle = range.color;
+                    ctx.fillRect(x, yTop, width, yBottom - yTop);
+                });
+                ctx.restore();
+            },
+        };
+
         if (chartInstance) {
             chartInstance.data = data;
             chartInstance.update("active");
@@ -224,7 +214,7 @@
         }
 
         chartInstance = new Chart(ctx, {
-            type: "line",
+            type: "bar",
             data,
             options: {
                 responsive: true,
@@ -251,24 +241,16 @@
                         min: 0,
                         max: 100,
                         ticks: { stepSize: 20 },
-                        title: { display: true, text: "Stress / Instability" },
+                        title: { display: true, text: "Stress / Trend / Instability" },
                         grid: { color: "rgba(0,0,0,0.06)" }
-                    },
-                    yFactor: {
-                        type: "linear",
-                        position: "right",
-                        min: 0,
-                        max: 24,
-                        ticks: { stepSize: 4 },
-                        title: { display: true, text: "Sleep / Screen / Mood" },
-                        grid: { drawOnChartArea: false }
                     },
                     x: {
                         grid: { display: false },
                         ticks: { autoSkip: true, maxTicksLimit: 12 }
                     }
                 }
-            }
+            },
+            plugins: [stressBandsPlugin]
         });
     }
 
@@ -298,19 +280,19 @@
                     period_end: "-",
                     entries_in_period: 0,
                     period_note: "",
-                });
+                }, series || {});
 
                 if (!series || !hasAnySeriesData(series)) {
                     setNoDataState(true);
                     renderInsights([]);
-                    updateStats([]);
+                    updateStats([], {});
                     return;
                 }
 
                 setNoDataState(false);
-                updateStats(entries || []);
+                updateStats(entries || [], series || {});
                 renderInsights(insights || []);
-                renderChart(series, seriesState || [true, true, true, false, false, false]);
+                renderChart(series, seriesState || [true, true, true]);
             })
             .catch((err) => {
                 console.error("History data error:", err);

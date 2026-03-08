@@ -136,7 +136,8 @@ def login():
 def logout():
     # Clear wizard session data on logout
     for key in ['wizard_step1', 'wizard_step2', 'wizard_quiz_completed', 'wizard_quiz_score',
-                 'wizard_quiz_answers', 'wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
+                 'wizard_quiz_answers', 'wizard_journal_text', 'wizard_sentiment',
+                 'wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
         session.pop(key, None)
     logout_user()
     flash('You have been logged out successfully.', 'info')
@@ -198,7 +199,8 @@ def assess_step1():
         }
         # New Step 1 input invalidates any previously computed/saved wizard result.
         for key in ['wizard_step2', 'wizard_quiz_completed', 'wizard_quiz_score',
-                    'wizard_quiz_answers', 'wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
+                'wizard_quiz_answers', 'wizard_journal_text', 'wizard_sentiment',
+                'wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
             session.pop(key, None)
         return redirect(url_for('assess_step2'))
 
@@ -278,7 +280,8 @@ def assess_step2():
             'age': age,
         }
         for key in ['wizard_quiz_completed', 'wizard_quiz_score', 'wizard_quiz_answers',
-                    'wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
+                'wizard_journal_text', 'wizard_sentiment',
+                'wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
             session.pop(key, None)
         return redirect(url_for('assess_step3'))
 
@@ -297,6 +300,7 @@ def assess_step3():
     if request.method == 'POST':
         quiz_values = []
         errors = []
+        journal_text = request.form.get('journal', '').strip()
         for i in range(1, 21):
             val = request.form.get(f'q{i}')
             if val is None:
@@ -323,16 +327,25 @@ def assess_step3():
         quiz_avg = sum(quiz_values) / len(quiz_values)
         quiz_score = max(0.0, min(100.0, ((quiz_avg - 1) / 4) * 100))
 
+        sentiment = None
+        if journal_text:
+            try:
+                sentiment = hybrid_engine.analyze_sentiment(journal_text)
+            except (AttributeError, TypeError, ValueError):
+                sentiment = {'polarity': 0.0, 'subjectivity': 0.0}
+
         session['wizard_quiz_completed'] = True
         session['wizard_quiz_score'] = quiz_score
         session['wizard_quiz_answers'] = quiz_values
+        session['wizard_journal_text'] = journal_text
+        session['wizard_sentiment'] = sentiment
         for key in ['wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
             session.pop(key, None)
         return redirect(url_for('assess_step4'))
 
     return render_template('wizard/step3.html',
                            questions=QUIZ_QUESTIONS,
-                           data={},
+                           data={'journal': session.get('wizard_journal_text', '')},
                            step=3)
 
 
@@ -347,6 +360,8 @@ def skip_quiz():
     session['wizard_quiz_completed'] = False
     session['wizard_quiz_score'] = None
     session['wizard_quiz_answers'] = None
+    session['wizard_journal_text'] = None
+    session['wizard_sentiment'] = None
     for key in ['wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
         session.pop(key, None)
     return redirect(url_for('assess_step4'))
@@ -367,6 +382,8 @@ def assess_step4():
     s2 = session['wizard_step2']
     quiz_completed = session['wizard_quiz_completed']
     quiz_score = session.get('wizard_quiz_score')
+    sentiment = session.get('wizard_sentiment')
+    journal_text = session.get('wizard_journal_text')
 
     # Use a neutral quiz score (50) when skipped — does not inflate/deflate
     effective_quiz_score = quiz_score if quiz_completed else 50.0
@@ -400,10 +417,10 @@ def assess_step4():
         badge_class = 'badge-low'
 
     # Top contributing factors
-    factors = _compute_top_factors(s1, s2, quiz_score, quiz_completed)
+    factors = _compute_top_factors(s1, s2, quiz_score, quiz_completed, sentiment)
 
     # Actionable tips (2–3)
-    tips = _generate_tips(s1, s2, stress_score)
+    tips = _generate_tips(s1, s2, stress_score, sentiment)
 
     # Adaptive tip
     adaptive_tip = None
@@ -412,7 +429,7 @@ def assess_step4():
         adaptive_tip = f"Last time this helped you: \"{successful_strategy}\""
 
     # Plain-language explanation
-    explanation = _build_explanation(stress_score, s1, s2, quiz_completed)
+    explanation = _build_explanation(stress_score, s1, s2, quiz_completed, sentiment)
 
     result = {
         'stress_score': round(stress_score, 1),
@@ -427,6 +444,8 @@ def assess_step4():
         'tips': tips,
         'adaptive_tip': adaptive_tip,
         'explanation': explanation,
+        'sentiment': sentiment,
+        'journal_present': bool(journal_text),
         'result_type': 'Full result (quiz completed)' if quiz_completed else 'Estimated result (quiz skipped)',
     }
     session['wizard_result'] = result
@@ -454,7 +473,8 @@ def assess_save():
 
     # Clear wizard session
     for key in ['wizard_step1', 'wizard_step2', 'wizard_quiz_completed',
-                 'wizard_quiz_score', 'wizard_quiz_answers', 'wizard_result',
+                 'wizard_quiz_score', 'wizard_quiz_answers', 'wizard_journal_text',
+                 'wizard_sentiment', 'wizard_result',
                  'wizard_saved_entry_id', 'wizard_saved_at']:
         session.pop(key, None)
 
@@ -643,6 +663,8 @@ def _persist_wizard_result_if_needed(user_id):
     s2 = session['wizard_step2']
     result = session['wizard_result']
     quiz_answers = session.get('wizard_quiz_answers')
+    journal_text = session.get('wizard_journal_text')
+    sentiment = session.get('wizard_sentiment')
 
     entry = AssessmentEntry(
         user_id=user_id,
@@ -668,11 +690,20 @@ def _persist_wizard_result_if_needed(user_id):
     db.session.commit()
 
     history_manager = StressHistory(user_id=user_id)
+    history_meta = entry.to_history_dict()
+    history_meta['journal_present'] = bool(journal_text)
+    if sentiment:
+        history_meta['sentiment'] = {
+            'polarity': round(float(sentiment.get('polarity', 0.0)), 3),
+            'subjectivity': round(float(sentiment.get('subjectivity', 0.0)), 3),
+        }
+    if journal_text:
+        history_meta['journal_excerpt'] = journal_text[:180]
     history_manager.save_entry(
         result['stress_score'],
         '; '.join(result['tips']),
         result['healing_status'],
-        meta=entry.to_history_dict()
+        meta=history_meta
     )
     update_user_goals(user_id, result['stress_score'], history_manager)
 
@@ -757,7 +788,7 @@ def _load_history_entries_for_user(user_id):
     return combined
 
 
-def _compute_top_factors(s1, s2, quiz_score, quiz_completed):
+def _compute_top_factors(s1, s2, quiz_score, quiz_completed, sentiment=None):
     """Return a ranked list of (label, value_note) contributing factors."""
     factors = []
     if s1['sleep'] < 6:
@@ -780,10 +811,12 @@ def _compute_top_factors(s1, s2, quiz_score, quiz_completed):
         factors.append(('🏃 No physical activity', 'Exercise significantly reduces stress'))
     if quiz_completed and quiz_score and quiz_score > 70:
         factors.append(('📝 High quiz stress score', f"{quiz_score:.0f}/100"))
+    if sentiment and float(sentiment.get('polarity', 0.0)) < -0.25:
+        factors.append(('🗒 Negative journal tone', 'Your reflection language suggests elevated emotional strain'))
     return factors[:5] or [('✅ No major stressors detected', 'Keep up the balance!')]
 
 
-def _generate_tips(s1, s2, stress_score):
+def _generate_tips(s1, s2, stress_score, sentiment=None):
     """Generate 2–3 personalised, actionable tips."""
     tips = []
     if s1['sleep'] < 7:
@@ -798,12 +831,14 @@ def _generate_tips(s1, s2, stress_score):
         tips.append("💬 Reach out to one person today — even a short chat can boost mood.")
     if s2['financial_stress'] >= 7:
         tips.append("💡 Write down one small financial action you can take this week to reduce uncertainty.")
+    if sentiment and float(sentiment.get('polarity', 0.0)) < -0.25:
+        tips.append("🗒 Try a two-line journal reframe: name the stressor, then write one next action you can control.")
     if stress_score > 70:
         tips.append("🧘 Practice 5 minutes of deep breathing or guided meditation to lower immediate stress.")
     return tips[:3] if tips else ["🌿 You're doing well. Maintain your current routine and check in again tomorrow."]
 
 
-def _build_explanation(stress_score, s1, s2, quiz_completed):
+def _build_explanation(stress_score, s1, s2, quiz_completed, sentiment=None):
     """Return a plain-language explanation of the stress score."""
     base = (
         f"Your overall stress score is <strong>{stress_score:.0f}/100</strong>. "
@@ -817,6 +852,12 @@ def _build_explanation(stress_score, s1, s2, quiz_completed):
     else:
         base += ("This is in the <strong>low</strong> range — great news! You're managing your lifestyle well. "
                  "Keep up your healthy habits.")
+    if sentiment:
+        polarity = float(sentiment.get('polarity', 0.0))
+        if polarity < -0.25:
+            base += " Your journal tone appeared negative, which often aligns with temporary emotional load."
+        elif polarity > 0.25:
+            base += " Your journal tone appeared positive, which is a protective signal for recovery."
     if not quiz_completed:
         base += (" <em>(Note: this is an estimated score. Completing the quiz gives a more precise result.)</em>")
     return base

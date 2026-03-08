@@ -10,7 +10,7 @@
 
     <div class="page-header stack mb-4">
         <h1>Stress Trends</h1>
-        <p class="page-subtitle">Daily line graph. Left axis: stress and instability (0-100). Right axis: sleep, screen time, and mood.</p>
+        <p class="page-subtitle">Daily bar chart showing stress score, stress trend, and lifestyle instability.</p>
     </div>
 
     {% if has_unsaved_result %}
@@ -28,17 +28,15 @@
         <button class="btn btn-filter" data-days="30" id="f30">30 Days</button>
         <button class="btn btn-filter" data-days="90" id="f90">90 Days</button>
         <span class="ms-3 text-muted small fw-600">Series:</span>
-        <label class="series-toggle"><input type="checkbox" checked data-series="0"> Stress</label>
-        <label class="series-toggle"><input type="checkbox" checked data-series="1"> Stress Trend (7d Avg)</label>
-        <label class="series-toggle"><input type="checkbox" checked data-series="2"> Instability</label>
-        <label class="series-toggle"><input type="checkbox" data-series="3"> Sleep</label>
-        <label class="series-toggle"><input type="checkbox" data-series="4"> Screen Time</label>
-        <label class="series-toggle"><input type="checkbox" data-series="5"> Mood</label>
+        <label class="series-toggle"><input type="checkbox" checked data-series="0"> Stress Score</label>
+        <label class="series-toggle"><input type="checkbox" checked data-series="1"> Stress Trend</label>
+        <label class="series-toggle"><input type="checkbox" checked data-series="2"> Lifestyle Instability</label>
     </div>
 
     <div class="result-card chart-info-card mb-3">
         <div class="small text-muted mb-1" id="rangeInfo">Loading selected period...</div>
         <div class="small text-muted" id="periodHint"></div>
+        <div class="small fw-600 mt-2" id="trendSummary"></div>
     </div>
 
     <!-- Stats row -->
@@ -51,8 +49,8 @@
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-mini-card text-center">
-                <div class="label">Peak Stress</div>
-                <div class="mini-score text-danger" id="peakStress">–</div>
+                <div class="label">Latest Δ</div>
+                <div class="mini-score" id="stressDelta">–</div>
             </div>
         </div>
         <div class="col-6 col-md-3">

@@ -68,6 +68,13 @@
                 </div>
             </div>
 
+            <div class="mb-4">
+                <label for="journal" class="form-label fw-semibold">Optional Journal Check-in</label>
+                <textarea id="journal" name="journal" class="form-control" rows="4"
+                    placeholder="How are you feeling today? (optional)">{{ data.get('journal', '') }}</textarea>
+                <div class="form-text">If provided, we use sentiment analysis to personalize tips.</div>
+            </div>
+
             <div class="quiz-grid">
                 {% for q in questions %}
                 {% set i = loop.index %}

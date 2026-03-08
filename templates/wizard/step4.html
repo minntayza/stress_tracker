@@ -127,6 +127,24 @@
         </div>
     </div>
 
+    {% if result.sentiment %}
+    <div class="result-card mini-stat text-center mb-4">
+        <div class="label">Journal Sentiment</div>
+        <div class="mini-score">
+            {% if result.sentiment.polarity > 0.25 %}
+            Positive
+            {% elif result.sentiment.polarity < -0.25 %}
+            Negative
+            {% else %}
+            Neutral
+            {% endif %}
+        </div>
+        <div class="mini-label text-muted">
+            Polarity: {{ '%.2f'|format(result.sentiment.polarity) }} · Subjectivity: {{ '%.2f'|format(result.sentiment.subjectivity) }}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- CTAs -->
     <p class="small text-muted mb-3">
         {% if autosaved_now %}
