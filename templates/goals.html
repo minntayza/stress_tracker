@@ -22,10 +22,7 @@
                 <div>
                     <div class="fw-600 fs-5">{{ goal.description or 'Goal #' ~ goal.id }}</div>
                     <div class="text-muted small">
-                        {% if goal.goal_type == 'avg_stress' %}Average Stress Reduction
-                        {% elif goal.goal_type == 'peak_stress' %}Peak Stress Reduction
-                        {% elif goal.goal_type == 'streak_days' %}Consistent Days
-                        {% endif %}
+                        Average Stress Reduction
                         {% if goal.deadline %} · Due {{ goal.deadline.strftime('%b %d, %Y') }}{% endif %}
                     </div>
                 </div>
@@ -85,11 +82,9 @@
             <div class="modal-body">
                 <form method="POST" action="{{ url_for('create_goal') }}" id="createGoalForm">
                     <div class="field-group">
-                        <label class="field-label" for="goal_type">Goal Type</label>
-                        <select name="goal_type" id="goal_type" class="form-select field-input" required>
-                            <option value="avg_stress">Reduce Average Stress</option>
-                            <option value="peak_stress">Lower Peak Stress</option>
-                        </select>
+                        <label class="field-label">Goal Type</label>
+                        <input type="text" class="form-control field-input" value="Reduce Average Stress" readonly>
+                        <input type="hidden" name="goal_type" value="avg_stress">
                     </div>
                     <div class="field-group">
                         <label class="field-label" for="gdesc">Description</label>

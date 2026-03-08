@@ -604,12 +604,24 @@ def goals():
 @app.route('/goals/create', methods=['POST'])
 @login_required
 def create_goal():
-    goal_type = request.form.get('goal_type')
-    target_value = float(request.form.get('target_value'))
+    goal_type = 'avg_stress'
+    try:
+        target_value = float(request.form.get('target_value'))
+    except (TypeError, ValueError):
+        flash('Please enter a valid numeric target value.', 'danger')
+        return redirect(url_for('goals'))
+
+    if not (0 <= target_value <= 100):
+        flash('Target value must be between 0 and 100.', 'danger')
+        return redirect(url_for('goals'))
+
     description = request.form.get('description', '')
     deadline_str = request.form.get('deadline')
-
-    deadline = datetime.strptime(deadline_str, '%Y-%m-%d').date() if deadline_str else None
+    try:
+        deadline = datetime.strptime(deadline_str, '%Y-%m-%d').date() if deadline_str else None
+    except ValueError:
+        flash('Please provide a valid deadline date.', 'danger')
+        return redirect(url_for('goals'))
 
     new_goal = Goal(
         user_id=current_user.id,
