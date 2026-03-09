@@ -97,6 +97,48 @@ class StressHistory:
         
         return None
 
+    def get_average_stress(self):
+        """
+        Calculate the average stress score from all history entries.
+        Returns: dict with 'average', 'count', or None if no history.
+        """
+        scores = [e.get('stress_score') for e in self.history if e.get('stress_score') is not None]
+        if not scores:
+            return None
+        return {
+            'average': round(sum(scores) / len(scores), 1),
+            'count': len(scores),
+        }
+
+    def compare_to_average(self, current_score):
+        """
+        Compare the current score to the user's historical average.
+        Returns: dict with 'average', 'count', 'diff', 'diff_pct', 'direction'
+                 or None if not enough history.
+        """
+        stats = self.get_average_stress()
+        if not stats or stats['count'] < 1:
+            return None
+
+        avg = stats['average']
+        diff = round(current_score - avg, 1)
+        diff_pct = round(abs(diff) / avg * 100, 0) if avg != 0 else 0
+
+        if diff > 2:
+            direction = 'higher'
+        elif diff < -2:
+            direction = 'lower'
+        else:
+            direction = 'same'
+
+        return {
+            'average': avg,
+            'count': stats['count'],
+            'diff': diff,
+            'diff_pct': int(diff_pct),
+            'direction': direction,
+        }
+
 if __name__ == "__main__":
     # Test script
     print("Initializing StressHistory...")

@@ -357,11 +357,19 @@ def skip_quiz():
         flash('Please complete Steps 1 and 2 first.', 'warning')
         return redirect(url_for('assess_step1'))
 
+    journal_text = request.form.get('journal', '').strip() or (session.get('wizard_journal_text') or '').strip()
+    sentiment = None
+    if journal_text:
+        try:
+            sentiment = hybrid_engine.analyze_sentiment(journal_text)
+        except (AttributeError, TypeError, ValueError):
+            sentiment = {'polarity': 0.0, 'subjectivity': 0.0}
+
     session['wizard_quiz_completed'] = False
     session['wizard_quiz_score'] = None
     session['wizard_quiz_answers'] = None
-    session['wizard_journal_text'] = None
-    session['wizard_sentiment'] = None
+    session['wizard_journal_text'] = journal_text
+    session['wizard_sentiment'] = sentiment
     for key in ['wizard_result', 'wizard_saved_entry_id', 'wizard_saved_at']:
         session.pop(key, None)
     return redirect(url_for('assess_step4'))
@@ -382,8 +390,19 @@ def assess_step4():
     s2 = session['wizard_step2']
     quiz_completed = session['wizard_quiz_completed']
     quiz_score = session.get('wizard_quiz_score')
-    sentiment = session.get('wizard_sentiment')
     journal_text = session.get('wizard_journal_text')
+
+    # Always recalculate sentiment from journal text (cheap, ensures latest engine)
+    if journal_text:
+        try:
+            sentiment = hybrid_engine.analyze_sentiment(journal_text)
+            session['wizard_sentiment'] = sentiment
+        except (AttributeError, TypeError, ValueError):
+            sentiment = {'polarity': 0.0, 'subjectivity': 0.0, 'polarity_label': 'Neutral',
+                         'subjectivity_label': 'Balanced', 'noun_phrases': [], 'sentences': []}
+            session['wizard_sentiment'] = sentiment
+    else:
+        sentiment = session.get('wizard_sentiment')
 
     # Use a neutral quiz score (50) when skipped — does not inflate/deflate
     effective_quiz_score = quiz_score if quiz_completed else 50.0
@@ -392,11 +411,15 @@ def assess_step4():
     activity_level = ACTIVITY_MAP.get(s2['activity'], 0)
     procrastination_level = PROCRASTINATION_MAP.get(s2['procrastination'], 5)
 
-    stress_score = fuzzy_system.compute_stress(
+    base_stress_score = fuzzy_system.compute_stress(
         s1['sleep'], s1['study'], s2['mood'], deadline_level, activity_level, s1['screen_time'],
         s2['social_interaction'], procrastination_level, s2['financial_stress'], s2['age'],
         effective_quiz_score
     )
+
+    # Hybrid: adjust fuzzy score with NLP sentiment
+    stress_score = hybrid_engine.compute_hybrid_stress(base_stress_score, sentiment)
+
     lifestyle_instability = fuzzy_system.compute_instability(
         s2['social_interaction'], procrastination_level, s2['financial_stress'], s2['age']
     )
@@ -431,6 +454,9 @@ def assess_step4():
     # Plain-language explanation
     explanation = _build_explanation(stress_score, s1, s2, quiz_completed, sentiment)
 
+    # Historical average comparison
+    avg_comparison = history_manager.compare_to_average(stress_score)
+
     result = {
         'stress_score': round(stress_score, 1),
         'lifestyle_instability': round(lifestyle_instability, 1),
@@ -445,7 +471,9 @@ def assess_step4():
         'adaptive_tip': adaptive_tip,
         'explanation': explanation,
         'sentiment': sentiment,
+        'journal_text': journal_text,
         'journal_present': bool(journal_text),
+        'avg_comparison': avg_comparison,
         'result_type': 'Full result (quiz completed)' if quiz_completed else 'Estimated result (quiz skipped)',
     }
     session['wizard_result'] = result
@@ -551,7 +579,7 @@ def history_data():
 
     stress_ma7 = _moving_average(stress_series, window=7)
 
-    insights = _generate_insights(filtered)
+    insights = []
 
     earliest_dt = parsed_entries[0]["_dt"] if parsed_entries else None
     period_note = ""

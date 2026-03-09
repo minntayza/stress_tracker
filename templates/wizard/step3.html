@@ -32,12 +32,14 @@
                 <em>estimated result</em> using your lifestyle data only.
             </p>
             <div class="d-flex flex-wrap gap-2">
-                <form method="POST" action="{{ url_for('skip_quiz') }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('skip_quiz') }}" style="display:inline;" id="skipQuizForm">
+                    <input type="hidden" name="journal" id="skipJournalInput">
                     <button type="submit" class="btn btn-skip">
                         <i class="bi bi-skip-forward me-1"></i>Skip quiz (optional)
                     </button>
                 </form>
-                <form method="POST" action="{{ url_for('skip_quiz') }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('skip_quiz') }}" style="display:inline;" id="doLaterForm">
+                    <input type="hidden" name="journal" id="doLaterJournalInput">
                     <button type="submit" class="btn btn-do-later">
                         <i class="bi bi-clock me-1"></i>Do it later
                     </button>
@@ -117,6 +119,9 @@
     // Track answered questions
     const radios = document.querySelectorAll('.likert-radio');
     const answered = new Set();
+    const journalInput = document.getElementById('journal');
+    const skipJournalInput = document.getElementById('skipJournalInput');
+    const doLaterJournalInput = document.getElementById('doLaterJournalInput');
 
     function updateQuizProgress() {
         const total = 20;
@@ -137,5 +142,17 @@
             updateQuizProgress();
         });
     });
+
+    function syncJournalToSkipForms() {
+        const val = journalInput ? journalInput.value : '';
+        if (skipJournalInput) skipJournalInput.value = val;
+        if (doLaterJournalInput) doLaterJournalInput.value = val;
+    }
+
+    if (journalInput) {
+        journalInput.addEventListener('input', syncJournalToSkipForms);
+    }
+
+    syncJournalToSkipForms();
 </script>
 {% endblock %}
