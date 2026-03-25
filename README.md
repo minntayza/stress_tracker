@@ -1,204 +1,56 @@
-# 🧠 Intelligent Adaptive Stress Assessment System
+# Intelligent Adaptive Stress Assessment System
 
-A comprehensive web application for stress assessment and management using fuzzy logic, sentiment analysis, and personalized goal tracking. The system learns from user patterns over time to provide adaptive recommendations for stress reduction.
+An AI-assisted web application that helps users assess, monitor, and understand their stress levels through fuzzy logic, sentiment analysis, and personalized recommendations.
 
-## 🌟 Features
+## Overview
 
-### **Multi-User Authentication**
-- Secure user registration and login system
-- Password hashing for data security
-- Individual user profiles with isolated data
+This project combines rule-based reasoning and lightweight NLP to build a more human-friendly stress assessment experience. Instead of relying on a single score, the system evaluates multiple lifestyle and emotional factors such as sleep, exercise, workload, and user-written reflections to generate adaptive stress insights.
 
-### **Intelligent Stress Analysis**
-- **Fuzzy Logic Engine**: Analyzes multiple stress factors including:
-  - Sleep quality and duration
-  - Exercise frequency
-  - Workload intensity
-  - Social interaction levels
-- **Hybrid ML/NLP**: Sentiment analysis using TextBlob to detect emotional nuances
-- Real-time stress score calculation with personalized recommendations
+## Key Features
 
-### **Self-Improvement Tracking**
-- **Healing Phase Detection**: Automatically identifies if stress levels are improving
-- **Historical Analysis**: Compares current stress with previous assessments
-- **Trend Monitoring**: Tracks whether users are in "Healing" or "Worsening" phases
-- Delta calculations to validate if recommendations are working
+- Secure user registration and login
+- Multi-factor stress evaluation using fuzzy logic
+- Sentiment analysis on user input for emotional context
+- Personalized recommendations based on current stress level
+- Historical stress tracking over time
+- Healing/worsening trend detection
+- Goal setting and progress tracking
+- Visual analytics for recovery trends and factor relationships
 
-### **Goal Management System**
-- Set personalized stress reduction goals
-- Track progress automatically based on stress assessments
-- Visual progress indicators
-- Achievement tracking and milestones
+## Tech Stack
 
-### **Visual Analytics**
-- Recovery arc visualization (stress over time)
-- Historical stress trend graphs
-- Interactive charts and data visualization
-- Network diagrams for stress factor relationships
+- **Backend:** Python, Flask
+- **Database:** SQLite, Flask-SQLAlchemy
+- **Authentication:** Flask-Login
+- **AI / Logic:** scikit-fuzzy, TextBlob, NumPy
+- **Visualization:** Matplotlib, NetworkX
+- **Frontend:** HTML, CSS, Jinja2
 
-## 🛠️ Technology Stack
+## Screenshots
 
-- **Backend**: Python, Flask
-- **Database**: SQLite with Flask-SQLAlchemy
-- **Authentication**: Flask-Login
-- **ML/AI Components**:
-  - scikit-fuzzy for fuzzy logic inference
-  - TextBlob for sentiment analysis
-  - NumPy for numerical computations
-- **Visualization**: Matplotlib, NetworkX
-- **Frontend**: HTML, CSS, Jinja2 templates
+> Add your own screenshots in a `/screenshots` folder and update the paths below.
 
-## 📋 Requirements
+- Dashboard overview  
+  `![Dashboard](./screenshots/dashboard.png)`
+- Stress assessment form  
+  `![Assessment](./screenshots/assessment.png)`
+- Trend analytics  
+  `![Analytics](./screenshots/analytics.png)`
 
-```
-scikit-fuzzy
-numpy
-textblob
-flask
-matplotlib
-networkx
-scipy
-packaging
-Flask-Login
-Flask-SQLAlchemy
-email-validator
-```
+## How It Works
 
-## 🚀 Installation
+1. The user logs in and submits stress-related inputs.
+2. A fuzzy logic engine evaluates the combined effect of multiple factors.
+3. Sentiment analysis adds emotional context from text responses.
+4. The system generates a stress score and personalized recommendations.
+5. Historical records are used to detect whether the user is improving or worsening over time.
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd folder
-   ```
+## Run Locally
 
-2. **Create a virtual environment**
-   ```bash
-   python3 -m venv .env
-   source .env/bin/activate  # On Windows: .env\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Run the application**
-   ```bash
-   python app.py
-   ```
-
-5. **Access the application**
-   - Open your browser and navigate to `http://localhost:5001`
-
-## 📖 Usage
-
-1. **Sign Up**: Create a new account with your email and password
-2. **Login**: Access your personal dashboard
-3. **Stress Assessment**: Input your current stress factors:
-   - Sleep quality (1-10)
-   - Exercise frequency (1-10)
-   - Workload level (1-10)
-   - Social interaction quality (1-10)
-4. **View Results**: Get your stress score and personalized recommendations
-5. **Set Goals**: Create stress reduction goals and track progress
-6. **Monitor History**: View your stress trends and healing phases over time
-
-## 🏗️ Project Structure
-
-```
-.
-├── app.py                  # Main Flask application with routes
-├── fuzzy_logic.py         # Fuzzy logic inference system
-├── stress_history.py      # History tracking and healing phase detection
-├── hybrid_engine.py       # Sentiment analysis engine
-├── visual_analytics.py    # Data visualization components
-├── database.py            # Database models (User, Goal, StressHistory)
-├── auth.py                # Authentication utilities
-├── templates/             # HTML templates
-│   ├── index.html        # Assessment form
-│   ├── result.html       # Results display
-│   ├── history.html      # Historical trends
-│   ├── goals.html        # Goal management
-│   ├── login.html        # Login page
-│   └── signup.html       # Registration page
-├── static/
-│   └── style.css         # Application styles
-└── requirements.txt      # Python dependencies
-```
-
-## 🧪 System Architecture
-
-The system follows a **5-Phase Implementation**:
-
-1. **Phase 1**: Core Knowledge Engine (Fuzzy Logic)
-2. **Phase 2**: Self-Improvement Loop (History Tracking)
-3. **Phase 3**: Hybrid ML & NLP (Sentiment Analysis)
-4. **Phase 4**: Web Interface (Flask Application)
-5. **Phase 5**: Visual Analytics (Trend Visualization)
-
-### How the "Healing Loop" Works
-
-1. **Initial Assessment**: User reports high stress (e.g., Score: 85)
-2. **System Recommendation**: "Increase Sleep"
-3. **Time Gap**: User implements the recommendation
-4. **Follow-up Assessment**: User returns after a week
-5. **Improvement Calculation**: Delta = Previous (85) - Current (55) = +30 improvement
-6. **System Decision**: "User is in Healing Phase"
-7. **Adaptive Learning**: System reinforces the "Sleep" strategy for future recommendations
-
-## 🎯 Key Algorithms
-
-### Fuzzy Logic Inference
-- Uses triangular membership functions
-- Analyzes multiple input variables simultaneously
-- Produces interpretable stress scores (0-100)
-
-### Healing Phase Detection
-```python
-if current_stress < previous_stress:
-    status = "Healing Phase"
-else:
-    status = "Intervention Needed"
-```
-
-### Sentiment Analysis
-- Analyzes user text input for emotional state
-- Enhances stress assessment accuracy
-- Detects nuances beyond numerical inputs
-
-## 🔐 Security Features
-
-- Password hashing with Werkzeug
-- Session management with Flask-Login
-- User data isolation in database
-- Secure authentication flows
-
-## 📊 Testing
-
-The project includes test files for various components:
-- `test_app.py`: Flask application tests
-- `test_adaptive.py`: Adaptive learning tests
-- `test_phase5.py`: Visual analytics tests
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is open source and available under the MIT License.
-
-## 👨‍💻 Author
-
-Built as part of an intelligent stress management system project.
-
-## 🙏 Acknowledgments
-
-- Fuzzy logic implementation inspired by stress assessment research
-- Self-improvement loop based on behavioral analysis principles
-- UI/UX designed for accessibility and ease of use
-
----
-
-**Note**: This application is for educational and personal use. It is not a substitute for professional mental health care. If you're experiencing severe stress or mental health issues, please consult a healthcare professional.
+```bash
+git clone https://github.com/minntayza/stress_tracker.git
+cd stress_tracker
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
